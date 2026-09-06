@@ -40,6 +40,15 @@ bgImages.CYBERPUNK.src = 'assets/bg_cyberpunk.jpg';
 bgImages.RETRO.src = 'assets/bg_retro.jpg';
 bgImages.ICE.src = 'assets/bg_ice.jpg';
 
+const skinImages = {
+    DOGE: new Image(),
+    CAT: new Image(),
+    FROG: new Image()
+};
+skinImages.DOGE.src = 'assets/skin_doge.jpg';
+skinImages.CAT.src = 'assets/skin_cat.jpg';
+skinImages.FROG.src = 'assets/skin_frog.jpg';
+
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -197,6 +206,13 @@ document.querySelectorAll('.stage-option').forEach(el => {
     });
 });
 
+document.querySelectorAll('.skin-option').forEach(el => {
+    el.addEventListener('click', () => {
+        const skin = el.getAttribute('data-skin');
+        socket.emit('change_skin', skin);
+    });
+});
+
 socket.on('chat_message', (data) => {
     const p = document.createElement('div');
     p.innerText = `${data.name}: ${data.message}`;
@@ -257,6 +273,17 @@ socket.on('game_state', (state) => {
         if (state.stage) {
             document.querySelectorAll('.stage-option').forEach(el => {
                 if (el.getAttribute('data-stage') === state.stage) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
+        
+        if (myRole && state.players[myRole]) {
+            const mySkin = state.players[myRole].skin || 'DEFAULT';
+            document.querySelectorAll('.skin-option').forEach(el => {
+                if (el.getAttribute('data-skin') === mySkin) {
                     el.classList.add('selected');
                 } else {
                     el.classList.remove('selected');
@@ -454,7 +481,7 @@ function drawPuck(puck, i) {
     }
 }
 
-function drawPaddle(x, y, color, isMe, radius, sp = 0) {
+function drawPaddle(x, y, color, isMe, radius, sp = 0, skin = 'DEFAULT') {
     if (sp >= 100) {
         ctx.save();
         ctx.translate(x, y);
@@ -479,11 +506,26 @@ function drawPaddle(x, y, color, isMe, radius, sp = 0) {
         ctx.restore();
     }
 
-    drawCircle(x, y, radius, color, isMe);
-    ctx.fillStyle = 'rgba(0,0,0,0.3)';
-    ctx.beginPath();
-    ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
-    ctx.fill();
+    if (skin && skin !== 'DEFAULT' && skinImages[skin] && skinImages[skin].complete) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.clip();
+        ctx.drawImage(skinImages[skin], x - radius, y - radius, radius * 2, radius * 2);
+        ctx.restore();
+        
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 4;
+        ctx.beginPath();
+        ctx.arc(x, y, radius, 0, Math.PI * 2);
+        ctx.stroke();
+    } else {
+        drawCircle(x, y, radius, color, isMe);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.beginPath();
+        ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
+        ctx.fill();
+    }
 }
 
 function drawBarrier(role) {
@@ -700,9 +742,9 @@ function gameLoop() {
                 if (p.barrierActive) drawBarrier(role);
                 
                 if (role === myRole) {
-                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true, p.paddleRadius, p.sp);
+                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true, p.paddleRadius, p.sp, p.skin);
                 } else {
-                    drawPaddle(p.x, p.y, p.color, false, p.paddleRadius, p.sp);
+                    drawPaddle(p.x, p.y, p.color, false, p.paddleRadius, p.sp, p.skin);
                 }
             }
         }

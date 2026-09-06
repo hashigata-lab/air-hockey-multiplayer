@@ -131,6 +131,49 @@
     display: block;
 }
 
+/* Skin Selection */
+.skin-selection-container {
+    margin: 20px 0;
+    text-align: left;
+    background: rgba(0,0,0,0.3);
+    border-radius: 8px;
+    padding: 15px;
+}
+.skin-options {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+}
+.skin-option {
+    flex: 1;
+    cursor: pointer;
+    text-align: center;
+    border: 2px solid transparent;
+    border-radius: 8px;
+    padding: 5px;
+    transition: 0.2s;
+}
+.skin-option:hover {
+    background: rgba(255,255,255,0.1);
+}
+.skin-option.selected {
+    border-color: #ff00ff;
+    background: rgba(255, 0, 255, 0.2);
+}
+.skin-option img, .skin-option .default-skin {
+    width: 100%;
+    aspect-ratio: 1;
+    object-fit: cover;
+    border-radius: 50%;
+    display: block;
+    margin-bottom: 5px;
+    background: #555;
+}
+.skin-option span {
+    font-size: 0.8em;
+    display: block;
+}
+
 #lobby {
             background: #222;
             padding: 30px;
@@ -243,6 +286,28 @@
                 <div class="stage-option" data-stage="ICE">
                     <img src="assets/bg_ice.jpg" alt="Ice">
                     <span>Fantasy Ice</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="skin-selection-container">
+            <h3 style="margin-bottom: 10px;">Select Your Skin</h3>
+            <div class="skin-options" id="skin-options">
+                <div class="skin-option selected" data-skin="DEFAULT">
+                    <div class="default-skin"></div>
+                    <span>Default</span>
+                </div>
+                <div class="skin-option" data-skin="DOGE">
+                    <img src="assets/skin_doge.jpg" alt="Doge">
+                    <span>Doge</span>
+                </div>
+                <div class="skin-option" data-skin="CAT">
+                    <img src="assets/skin_cat.jpg" alt="Crying Cat">
+                    <span>Crying Cat</span>
+                </div>
+                <div class="skin-option" data-skin="FROG">
+                    <img src="assets/skin_frog.jpg" alt="Smug Frog">
+                    <span>Smug Frog</span>
                 </div>
             </div>
         </div>

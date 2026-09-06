@@ -34,10 +34,10 @@ function createInitialGameState() {
         items: [],
         itemSpawnTimer: 0,
         players: {
-            bottom: { x: BOARD_SIZE / 2, y: BOARD_SIZE - PADDLE_RADIUS - 20, active: false, id: null, name: '', color: '#ff4444', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 },
-            top:    { x: BOARD_SIZE / 2, y: PADDLE_RADIUS + 20, active: false, id: null, name: '', color: '#4444ff', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 },
-            left:   { x: PADDLE_RADIUS + 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#44ff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 },
-            right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 }
+            bottom: { x: BOARD_SIZE / 2, y: BOARD_SIZE - PADDLE_RADIUS - 20, active: false, id: null, name: '', color: '#ff4444', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0, skin: 'DEFAULT' },
+            top:    { x: BOARD_SIZE / 2, y: PADDLE_RADIUS + 20, active: false, id: null, name: '', color: '#4444ff', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0, skin: 'DEFAULT' },
+            left:   { x: PADDLE_RADIUS + 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#44ff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0, skin: 'DEFAULT' },
+            right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0, skin: 'DEFAULT' }
         },
         status: 'WAITING',
         stage: 'CYBERPUNK',
@@ -273,6 +273,16 @@ io.on('connection', (socket) => {
             const roomState = rooms[clientInfo.roomId];
             if (roomState && roomState.status === 'WAITING') {
                 roomState.stage = stageName;
+            }
+        }
+    });
+
+    socket.on('change_skin', (skinId) => {
+        const clientInfo = connectedClients[socket.id];
+        if (clientInfo && clientInfo.roomId && socket.role) {
+            const roomState = rooms[clientInfo.roomId];
+            if (roomState && roomState.players[socket.role]) {
+                roomState.players[socket.role].skin = skinId;
             }
         }
     });
