@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>4-Player Air Hockey</title>
+    <title>ディスクオブカオス ～四天王覚醒～</title>
     <style>
         body {
             margin: 0; 
@@ -452,9 +452,9 @@
 </head>
 <body>
     <!-- Mascot Character -->
-    <div id="mascot-container" style="position: absolute; bottom: 30px; left: 30px; z-index: 10; animation: floatMascot 4s ease-in-out infinite;">
+    <div id="mascot-container" style="position: absolute; bottom: 30px; left: -200px; z-index: 10; animation: walkAcross 15s linear infinite;">
         <!-- mix-blend-mode: multiply makes the white background transparent against bright backgrounds -->
-        <img src="assets/mascot.jpg" alt="Original Mascot" style="width: 180px; mix-blend-mode: multiply; border-radius: 10px;">
+        <img src="assets/mascot.jpg" alt="Original Mascot" style="width: 180px; mix-blend-mode: multiply; border-radius: 50%; animation: hop 0.5s infinite alternate ease-out;">
     </div>
     <button id="btn-mute">🎵</button>
     <button id="btn-options">⚙️</button>
@@ -500,7 +500,7 @@
     </div>
 
     <div id="lobby">
-        <h2>Air Hockey</h2>
+        <h2>🔥 ディスクオブカオス 🔥<br><span style="font-size: 0.5em; letter-spacing: 3px;">～四天王覚醒～</span></h2>
         <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
         <input type="text" id="roomIdInput" placeholder="Room ID (Leave empty to create)">
         <div>
