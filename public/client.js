@@ -1,13 +1,17 @@
 const socket = io({ autoConnect: false }); // ロビーでJoinするまで接続しない
 
-const lobbyDiv = document.getElementById('lobby');
+const titleScreen = document.getElementById('title-screen');
+const homeScreen = document.getElementById('home-screen');
 const gameContainer = document.getElementById('game-container');
 const chatContainer = document.getElementById('chat-container');
 
 const playerNameInput = document.getElementById('playerName');
 const roomIdInput = document.getElementById('roomIdInput');
+const btnLogin = document.getElementById('btnLogin');
+const btnGuestLogin = document.getElementById('btnGuestLogin');
 const btnCreateRoom = document.getElementById('btnCreateRoom');
 const btnJoinRoom = document.getElementById('btnJoinRoom');
+const btnBackToTitle = document.getElementById('btnBackToTitle');
 
 const statusText = document.getElementById('status');
 const debugInfo = document.getElementById('debug-info');
@@ -418,14 +422,15 @@ function joinGame(roomId) {
         bgmController.play('WAITING');
     }
     currentRoomId = roomId;
-    const playerName = playerNameInput.value.trim() || 'Guest';
+    const playerName = document.getElementById('home-player-name').innerText || 'Guest';
     
     // URLを更新
     const newUrl = new URL(window.location.href);
     newUrl.searchParams.set('room', roomId);
     window.history.pushState({ path: newUrl.href }, '', newUrl.href);
 
-    lobbyDiv.style.display = 'none';
+    titleScreen.style.display = 'none';
+    homeScreen.style.display = 'none';
     document.getElementById('lobby-screen').style.display = 'block';
     document.getElementById('lobby-room-id').innerText = currentRoomId;
     gameContainer.style.display = 'none';
@@ -438,6 +443,48 @@ function joinGame(roomId) {
         socket.emit('join_room', { roomId, playerName });
     });
 }
+
+function showHomeScreen(playerName) {
+    sessionStorage.setItem('playerName', playerName);
+    titleScreen.style.display = 'none';
+    homeScreen.style.display = 'block';
+    document.getElementById('home-player-name').innerText = playerName;
+    
+    // Start lobby music on home screen
+    bgmController.initWebAudio();
+    if (!bgmController.hasStarted) {
+        bgmController.hasStarted = true;
+        bgmController.play('WAITING');
+    }
+}
+
+// Auto-login from sessionStorage if it exists
+window.addEventListener('DOMContentLoaded', () => {
+    const savedName = sessionStorage.getItem('playerName');
+    if (savedName) {
+        showHomeScreen(savedName);
+    }
+});
+
+btnLogin.addEventListener('click', () => {
+    const name = playerNameInput.value.trim();
+    if (name) {
+        showHomeScreen(name);
+    } else {
+        alert("Please enter a name to login");
+    }
+});
+
+btnGuestLogin.addEventListener('click', () => {
+    const randomName = 'Guest_' + Math.floor(Math.random() * 10000);
+    playerNameInput.value = randomName;
+    showHomeScreen(randomName);
+});
+
+btnBackToTitle.addEventListener('click', () => {
+    sessionStorage.removeItem('playerName');
+    window.location.reload();
+});
 
 btnCreateRoom.addEventListener('click', () => {
     const roomId = roomIdInput.value.trim().toUpperCase();

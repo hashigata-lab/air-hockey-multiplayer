@@ -113,7 +113,7 @@
 }
 
 /* Lobby Screen UI */
-#lobby, #lobby-screen {
+#title-screen, #home-screen, #lobby-screen {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
@@ -134,18 +134,18 @@
     max-height: 95vh;
     overflow-y: auto;
 }
-#lobby h1, #lobby-screen h1, #lobby h2, #lobby-screen h2, #lobby h3, #lobby-screen h3 {
+#title-screen h1, #home-screen h1, #lobby-screen h1, #title-screen h2, #home-screen h2, #lobby-screen h2, #title-screen h3, #home-screen h3, #lobby-screen h3 {
     color: #e0e5ec;
     text-shadow: 0 0 10px #8bb5e0, 0 0 20px #4a7ab5;
     margin-top: 0;
     font-family: 'Cinzel', 'Noto Serif JP', serif;
     font-weight: 300;
 }
-#lobby h2 {
+#title-screen h2, #home-screen h2 {
     font-size: clamp(24px, 6vw, 32px);
     white-space: nowrap;
 }
-#lobby input {
+#title-screen input, #home-screen input {
     display: block;
     width: 100%;
     margin: 10px 0;
@@ -160,12 +160,12 @@
     font-weight: bold;
     text-align: center;
 }
-#lobby input:focus {
+#title-screen input:focus, #home-screen input:focus {
     outline: none;
     border-color: #8bb5e0;
     box-shadow: 0 0 15px rgba(139, 181, 224, 0.6);
 }
-#lobby button, #lobby-screen button {
+#title-screen button, #home-screen button, #lobby-screen button {
     background: rgba(20, 40, 80, 0.6);
     color: #fff;
     border: 1px solid rgba(150, 200, 255, 0.5);
@@ -179,12 +179,12 @@
     text-transform: uppercase;
     text-shadow: 0 0 5px #8bb5e0;
 }
-#lobby button:hover, #lobby-screen button:hover {
+#title-screen button:hover, #home-screen button:hover, #lobby-screen button:hover {
     background: rgba(40, 80, 140, 0.8);
     box-shadow: 0 0 20px rgba(139, 181, 224, 0.6);
     transform: scale(1.05);
 }
-#lobby button:active, #lobby-screen button:active {
+#title-screen button:active, #home-screen button:active, #lobby-screen button:active {
     transform: scale(0.95);
     box-shadow: 0 0 5px rgba(255,0,60,0.5);
 }
@@ -550,7 +550,8 @@
         </div>
     </div>
 
-    <div id="lobby" class="animate__animated animate__zoomIn">
+    <!-- Title Screen -->
+    <div id="title-screen" class="animate__animated animate__zoomIn">
         <h2 style="position: relative; margin-bottom: 20px; text-align: center; border: none; background: transparent; box-shadow: none; pointer-events: none;">
             <svg viewBox="0 0 200 200" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 450px; opacity: 0.6; z-index: 0; pointer-events: none;">
                 <defs>
@@ -586,11 +587,8 @@
 
                 <!-- Minimalist Mallet -->
                 <g filter="url(#malletShadow)">
-                    <!-- Base -->
                     <rect x="40" y="140" width="120" height="24" rx="12" fill="url(#silverGrad)" />
-                    <!-- Handle -->
                     <path d="M 85 140 L 85 60 C 85 30, 115 30, 115 60 L 115 140 Z" fill="url(#silverGrad)" />
-                    <!-- Highlight to make it look metallic/sleek -->
                     <path d="M 95 140 L 95 60 C 95 40, 105 40, 105 60 L 105 140 Z" fill="#ffffff" opacity="0.5" />
                     <ellipse cx="100" cy="140" rx="60" ry="12" fill="#cce0ff" opacity="0.3" />
                 </g>
@@ -608,17 +606,31 @@
                 <div style="font-size: 16px; letter-spacing: 8px; text-transform: uppercase; color: #aaccff; text-shadow: 0 0 5px #8bb5e0; margin-top: -85px; position: relative; z-index: 2;">Awakening of the Four</div>
             </div>
         </h2>
-        <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
+        <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
+        <div style="margin-top: 10px;">
+            <button id="btnLogin">Login</button>
+            <button id="btnGuestLogin" style="background: #4a7ab5; border-color: #336699; box-shadow: 0 4px 0 #336699;">Play as Guest</button>
+        </div>
+        <div style="margin-top: 20px;">
+            <button id="btn-show-auth" style="background: #1E90FF; border-color: #0000CD; box-shadow: 0 4px 0 #0000CD; display:none;">Login / Register</button>
+            <button id="btn-show-leaderboard" style="background: #FFD700; color: #000; border-color: #DAA520; box-shadow: 0 4px 0 #DAA520;">Leaderboard</button>
+        </div>
+        <p id="auth-status" style="font-size: 16px; margin-top: 10px; color: #32CD32; font-weight: bold;"></p>
+    </div>
+
+    <!-- Home Screen -->
+    <div id="home-screen" class="animate__animated animate__zoomIn" style="display: none;">
+        <h2 style="color: #e0e5ec; text-shadow: 0 0 10px #8bb5e0; text-align: center; font-size: 32px; margin-bottom: 20px;">HOME</h2>
+        <p style="text-align: center; color: #aaccff; font-size: 18px; margin-bottom: 30px;">Welcome, <span id="home-player-name" style="color: #fff; font-weight: bold;"></span></p>
+        
         <input type="text" id="roomIdInput" placeholder="Enter Room ID" maxlength="10">
         <div>
             <button id="btnCreateRoom" class="animate__animated animate__pulse animate__infinite animate__slower">Create Room</button>
             <button id="btnJoinRoom">Join Room</button>
         </div>
-        <div style="margin-top: 20px;">
-            <button id="btn-show-auth" style="background: #1E90FF; border-color: #0000CD; box-shadow: 0 4px 0 #0000CD;">Login / Register</button>
-            <button id="btn-show-leaderboard" style="background: #FFD700; color: #000; border-color: #DAA520; box-shadow: 0 4px 0 #DAA520;">Leaderboard</button>
+        <div style="margin-top: 30px;">
+            <button id="btnBackToTitle" style="background: #555; border-color: #333; box-shadow: 0 4px 0 #333;">Logout</button>
         </div>
-        <p id="auth-status" style="font-size: 16px; margin-top: 10px; color: #32CD32; font-weight: bold;"></p>
     </div>
 
     <!-- Waiting Room Lobby -->
