@@ -26,6 +26,8 @@ const PADDLE_RADIUS = 35;
 const ITEM_RADIUS = 20;
 
 let audioCtx = null;
+let shakeFrames = 0;
+let puckTrails = [];
 
 function initAudio() {
     if (!audioCtx) {
@@ -95,6 +97,14 @@ function playSound(type) {
         gainNode.gain.linearRampToValueAtTime(0, now + 1.5);
         osc.start(now);
         osc.stop(now + 1.5);
+    } else if (type === 'hyper_smash') {
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(100, now);
+        osc.frequency.exponentialRampToValueAtTime(10, now + 0.5);
+        gainNode.gain.setValueAtTime(0.6, now);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+        osc.start(now);
+        osc.stop(now + 0.5);
     }
 }
 
@@ -202,7 +212,11 @@ socket.on('system_message', (msg) => {
 socket.on('game_state', (state) => {
     serverState = state;
     if (state.events && state.events.length > 0) {
-        state.events.forEach(ev => playSound(ev));
+        state.events.forEach(ev => {
+            playSound(ev);
+            if (ev === 'hyper_smash') shakeFrames = 15;
+            if (ev === 'wall' && state.pucks.some(p => p.isHyper)) shakeFrames = 8;
+        });
     }
 });
 
@@ -252,7 +266,7 @@ canvas.addEventListener('touchmove', (e) => {
 
 function drawBoard() {
     ctx.fillStyle = '#222';
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
 
     const goalStart = (BOARD_SIZE - GOAL_SIZE) / 2;
     const goalEnd = goalStart + GOAL_SIZE;
@@ -314,11 +328,38 @@ function drawCircle(x, y, radius, color, isMe = false) {
     ctx.stroke();
 }
 
-function drawPuck(x, y) {
-    drawCircle(x, y, PUCK_RADIUS, '#ddd');
+function drawPuck(puck, i) {
+    if (puck.isHyper) {
+        if (puckTrails[i]) {
+            puckTrails[i].forEach(t => {
+                ctx.fillStyle = `rgba(255, 60, 0, ${t.life})`;
+                ctx.beginPath();
+                ctx.arc(t.x, t.y, PUCK_RADIUS * t.life, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
+        
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = '#ff3300';
+        drawCircle(puck.x, puck.y, PUCK_RADIUS, '#ffaa00');
+        ctx.shadowBlur = 0;
+    } else {
+        drawCircle(puck.x, puck.y, PUCK_RADIUS, '#ddd');
+    }
 }
 
-function drawPaddle(x, y, color, isMe, radius) {
+function drawPaddle(x, y, color, isMe, radius, sp = 0) {
+    if (sp >= 100) {
+        ctx.shadowBlur = 20;
+        ctx.shadowColor = color;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.arc(x, y, radius + 15 + Math.sin(Date.now() / 80) * 5, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.shadowBlur = 0;
+    }
+
     drawCircle(x, y, radius, color, isMe);
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
@@ -417,6 +458,21 @@ function drawUI() {
         ctx.stroke();
     }
 
+    function drawSPGauge(sp) {
+        ctx.fillStyle = 'rgba(255,255,255,0.2)';
+        ctx.fillRect(-50, 45, 100, 8);
+        
+        if (sp >= 100) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#ffff00';
+            ctx.fillStyle = '#ffff00';
+        } else {
+            ctx.fillStyle = '#ff8800';
+        }
+        ctx.fillRect(-50, 45, sp, 8);
+        ctx.shadowBlur = 0;
+    }
+
     const p = serverState.players;
     
     if (p.top.active) {
@@ -424,6 +480,7 @@ function drawUI() {
         ctx.translate(BOARD_SIZE/2, 35);
         ctx.fillText(`${p.top.name} ${getHearts(p.top.lives, '💙')}`, 0, 0);
         drawEffectRing(p.top.activeEffect);
+        drawSPGauge(p.top.sp);
         ctx.restore();
     }
     
@@ -432,6 +489,7 @@ function drawUI() {
         ctx.translate(BOARD_SIZE/2, BOARD_SIZE - 20);
         ctx.fillText(`${p.bottom.name} ${getHearts(p.bottom.lives, '❤️')}`, 0, 0);
         drawEffectRing(p.bottom.activeEffect);
+        drawSPGauge(p.bottom.sp);
         ctx.restore();
     }
     
@@ -441,6 +499,7 @@ function drawUI() {
         ctx.rotate(-Math.PI / 2);
         ctx.fillText(`${p.left.name} ${getHearts(p.left.lives, '💚')}`, 0, 0);
         drawEffectRing(p.left.activeEffect);
+        drawSPGauge(p.left.sp);
         ctx.restore();
     }
     
@@ -450,6 +509,7 @@ function drawUI() {
         ctx.rotate(Math.PI / 2);
         ctx.fillText(`${p.right.name} ${getHearts(p.right.lives, '💛')}`, 0, 0);
         drawEffectRing(p.right.activeEffect);
+        drawSPGauge(p.right.sp);
         ctx.restore();
     }
 
@@ -478,10 +538,36 @@ function gameLoop() {
         return;
     }
 
+    ctx.save();
+    if (shakeFrames > 0) {
+        let maxShake = (shakeFrames / 15) * 20;
+        ctx.translate((Math.random() - 0.5) * maxShake, (Math.random() - 0.5) * maxShake);
+        shakeFrames--;
+    }
+
     drawBoard();
 
     if (serverState) {
-        // アイテムの描画
+        // Trail update
+        if (serverState.pucks) {
+            for (let i = 0; i < serverState.pucks.length; i++) {
+                let p = serverState.pucks[i];
+                if (!puckTrails[i]) puckTrails[i] = [];
+                if (p.isHyper) {
+                    puckTrails[i].push({ x: p.x, y: p.y, life: 1.0 });
+                    if (puckTrails[i].length > 15) puckTrails[i].shift();
+                } else {
+                    puckTrails[i] = [];
+                }
+            }
+        }
+        for (let i = 0; i < puckTrails.length; i++) {
+            for (let j = puckTrails[i].length - 1; j >= 0; j--) {
+                puckTrails[i][j].life -= 0.15;
+                if (puckTrails[i][j].life <= 0) puckTrails[i].splice(j, 1);
+            }
+        }
+
         if (serverState.items) {
             for (let item of serverState.items) {
                 drawItem(item.x, item.y, item.type);
@@ -495,24 +581,25 @@ function gameLoop() {
                 if (p.barrierActive) drawBarrier(role);
                 
                 if (role === myRole) {
-                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true, p.paddleRadius);
+                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true, p.paddleRadius, p.sp);
                 } else {
-                    drawPaddle(p.x, p.y, p.color, false, p.paddleRadius);
+                    drawPaddle(p.x, p.y, p.color, false, p.paddleRadius, p.sp);
                 }
             }
         }
         
-        // パックの描画
         if (serverState.pucks) {
-            for (let puck of serverState.pucks) {
+            for (let i = 0; i < serverState.pucks.length; i++) {
+                let puck = serverState.pucks[i];
                 if (puck.x > 0 && puck.x < BOARD_SIZE && puck.y > 0 && puck.y < BOARD_SIZE) {
-                    drawPuck(puck.x, puck.y);
+                    drawPuck(puck, i);
                 }
             }
         }
     }
 
     drawUI();
+    ctx.restore();
 
     requestAnimationFrame(gameLoop);
 }

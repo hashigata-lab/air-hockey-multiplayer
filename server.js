@@ -30,14 +30,14 @@ const connectedClients = {}; // socket.id -> { roomId, role, name }
 function createInitialGameState() {
     return {
         events: [],
-        pucks: [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null }],
+        pucks: [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null, isHyper: false }],
         items: [],
         itemSpawnTimer: 0,
         players: {
-            bottom: { x: BOARD_SIZE / 2, y: BOARD_SIZE - PADDLE_RADIUS - 20, active: false, id: null, name: '', color: '#ff4444', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null },
-            top:    { x: BOARD_SIZE / 2, y: PADDLE_RADIUS + 20, active: false, id: null, name: '', color: '#4444ff', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null },
-            left:   { x: PADDLE_RADIUS + 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#44ff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null },
-            right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null }
+            bottom: { x: BOARD_SIZE / 2, y: BOARD_SIZE - PADDLE_RADIUS - 20, active: false, id: null, name: '', color: '#ff4444', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 },
+            top:    { x: BOARD_SIZE / 2, y: PADDLE_RADIUS + 20, active: false, id: null, name: '', color: '#4444ff', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 },
+            left:   { x: PADDLE_RADIUS + 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#44ff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 },
+            right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 }
         },
         status: 'WAITING',
         winner: null
@@ -46,7 +46,7 @@ function createInitialGameState() {
 
 function resetPucks(roomState) {
     roomState.events = [];
-    roomState.pucks = [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null }];
+    roomState.pucks = [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null, isHyper: false }];
     roomState.items = [];
     roomState.itemSpawnTimer = 0;
     
@@ -55,6 +55,7 @@ function resetPucks(roomState) {
         roomState.players[role].paddleRadius = PADDLE_RADIUS;
         roomState.players[role].barrierActive = false;
         roomState.players[role].activeEffect = null;
+        roomState.players[role].sp = 0;
     }
 }
 
@@ -92,6 +93,7 @@ function handleGoal(roomId, role, puckIndex) {
     let p = roomState.players[role];
     if (!p.eliminated) {
         p.lives--;
+        p.sp = Math.min(100, p.sp + 30);
         io.to(roomId).emit('system_message', `${p.name || role.toUpperCase()} was scored on!`);
 
         if (p.lives <= 0) {
@@ -127,7 +129,7 @@ function handleGoal(roomId, role, puckIndex) {
         if (roomState.pucks.length === 0) {
             setTimeout(() => {
                 if (rooms[roomId] && rooms[roomId].status === 'PLAYING') {
-                    rooms[roomId].pucks.push({ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null });
+                    rooms[roomId].pucks.push({ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null, isHyper: false });
                 }
             }, 1000);
         }
@@ -200,7 +202,8 @@ function applyItemEffect(roomId, type, puck) {
                 y: BOARD_SIZE / 2,
                 vx: (Math.random() > 0.5 ? 1 : -1) * 8,
                 vy: (Math.random() > 0.5 ? 1 : -1) * 8,
-                lastHitter: null
+                lastHitter: null,
+                isHyper: false
             });
             break;
     }
@@ -211,6 +214,7 @@ io.on('connection', (socket) => {
         if (connectedClients[socket.id]) return; 
 
         socket.join(roomId);
+        socket.roomId = roomId;
 
         if (!rooms[roomId]) {
             rooms[roomId] = createInitialGameState();
@@ -222,6 +226,7 @@ io.on('connection', (socket) => {
         for (let role of ROLES) {
             if (!roomState.players[role].active) {
                 assignedRole = role;
+                socket.role = role;
                 roomState.players[role].active = true;
                 roomState.players[role].id = socket.id;
                 roomState.players[role].name = playerName || `Player ${Math.floor(Math.random() * 1000)}`;
@@ -257,33 +262,37 @@ io.on('connection', (socket) => {
     });
 
     socket.on('player_input', (data) => {
-        const clientInfo = connectedClients[socket.id];
-        if (!clientInfo || !clientInfo.role) return;
+        const roomState = rooms[socket.roomId];
+        if (roomState && roomState.status === 'PLAYING' && socket.role) {
+            let p = roomState.players[socket.role];
+            if (p && !p.eliminated) {
+                let dx = data.x - p.lastX;
+                let dy = data.y - p.lastY;
+                p.lastSpeed = Math.sqrt(dx * dx + dy * dy);
+                
+                let x = data.x;
+                let y = data.y;
+                let pr = p.paddleRadius;
+                
+                if (socket.role === 'bottom') {
+                    x = Math.max(pr, Math.min(BOARD_SIZE - pr, x));
+                    y = Math.max(BOARD_SIZE / 2 + pr, Math.min(BOARD_SIZE - pr, y));
+                } else if (socket.role === 'top') {
+                    x = Math.max(pr, Math.min(BOARD_SIZE - pr, x));
+                    y = Math.max(pr, Math.min(BOARD_SIZE / 2 - pr, y));
+                } else if (socket.role === 'left') {
+                    x = Math.max(pr, Math.min(BOARD_SIZE / 2 - pr, x));
+                    y = Math.max(pr, Math.min(BOARD_SIZE - pr, y));
+                } else if (socket.role === 'right') {
+                    x = Math.max(BOARD_SIZE / 2 + pr, Math.min(BOARD_SIZE - pr, x));
+                    y = Math.max(pr, Math.min(BOARD_SIZE - pr, y));
+                }
 
-        const roomState = rooms[clientInfo.roomId];
-        const role = clientInfo.role;
-
-        if (roomState && roomState.players[role] && !roomState.players[role].eliminated) {
-            let x = data.x;
-            let y = data.y;
-            let pr = roomState.players[role].paddleRadius;
-            
-            if (role === 'bottom') {
-                x = Math.max(pr, Math.min(BOARD_SIZE - pr, x));
-                y = Math.max(BOARD_SIZE / 2 + pr, Math.min(BOARD_SIZE - pr, y));
-            } else if (role === 'top') {
-                x = Math.max(pr, Math.min(BOARD_SIZE - pr, x));
-                y = Math.max(pr, Math.min(BOARD_SIZE / 2 - pr, y));
-            } else if (role === 'left') {
-                x = Math.max(pr, Math.min(BOARD_SIZE / 2 - pr, x));
-                y = Math.max(pr, Math.min(BOARD_SIZE - pr, y));
-            } else if (role === 'right') {
-                x = Math.max(BOARD_SIZE / 2 + pr, Math.min(BOARD_SIZE - pr, x));
-                y = Math.max(pr, Math.min(BOARD_SIZE - pr, y));
+                p.x = x;
+                p.y = y;
+                p.lastX = x;
+                p.lastY = y;
             }
-
-            roomState.players[role].x = x;
-            roomState.players[role].y = y;
         }
     });
 
@@ -383,11 +392,15 @@ setInterval(() => {
             puck.x += puck.vx;
             puck.y += puck.vy;
 
+            // Friction and Limit
             puck.vx *= 0.99;
             puck.vy *= 0.99;
-
-            if (Math.abs(puck.vx) < 0.1) puck.vx = 0;
-            if (Math.abs(puck.vy) < 0.1) puck.vy = 0;
+            let currentSpeed = Math.sqrt(puck.vx * puck.vx + puck.vy * puck.vy);
+            let limit = puck.isHyper ? 35 : 15;
+            if (currentSpeed > limit) {
+                puck.vx = (puck.vx / currentSpeed) * limit;
+                puck.vy = (puck.vy / currentSpeed) * limit;
+            }
 
             // ゴール判定 or 壁反射
             if (puck.x - PUCK_RADIUS < 0) {
@@ -436,19 +449,30 @@ setInterval(() => {
 
             // マレットとの衝突
             for (let role of ROLES) {
-                let player = roomState.players[role];
-                if (player.active && !player.eliminated) {
-                    let dx = puck.x - player.x;
-                    let dy = puck.y - player.y;
+                let p = roomState.players[role];
+                if (p.active && !p.eliminated) {
+                    let dx = puck.x - p.x;
+                    let dy = puck.y - p.y;
                     let distance = Math.sqrt(dx * dx + dy * dy);
-                    let minDist = PUCK_RADIUS + player.paddleRadius;
+                    let minDist = PUCK_RADIUS + p.paddleRadius;
 
                     if (distance < minDist) {
-                        let angle = Math.atan2(dy, dx);
-                        puck.x = player.x + Math.cos(angle) * minDist;
-                        puck.y = player.y + Math.sin(angle) * minDist;
+                        let overlap = minDist - distance;
+                        puck.x += (dx / distance) * overlap;
+                        puck.y += (dy / distance) * overlap;
 
+                        let angle = Math.atan2(puck.y - p.y, puck.x - p.x);
                         let hitPower = 12;
+                        if (p.sp >= 100 && p.lastSpeed > 5) {
+                            p.sp = 0;
+                            hitPower = 28;
+                            puck.isHyper = true;
+                            roomState.events.push('hyper_smash');
+                        } else {
+                            p.sp = Math.min(100, p.sp + 10);
+                            puck.isHyper = false;
+                        }
+
                         puck.vx = Math.cos(angle) * hitPower;
                         puck.vy = Math.sin(angle) * hitPower;
                         puck.lastHitter = role;
