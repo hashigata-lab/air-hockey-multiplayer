@@ -5,10 +5,9 @@ const homeScreen = document.getElementById('home-screen');
 const gameContainer = document.getElementById('game-container');
 const chatContainer = document.getElementById('chat-container');
 
-const playerNameInput = document.getElementById('playerName');
-const roomIdInput = document.getElementById('roomIdInput');
-const btnLogin = document.getElementById('btnLogin');
+
 const btnGuestLogin = document.getElementById('btnGuestLogin');
+const roomIdInput = document.getElementById('roomIdInput');
 const btnCreateRoom = document.getElementById('btnCreateRoom');
 const btnJoinRoom = document.getElementById('btnJoinRoom');
 const btnBackToTitle = document.getElementById('btnBackToTitle');
@@ -203,31 +202,13 @@ function getRankBadge(rating) {
 
 function updateAuthStatus() {
     const statusEl = document.getElementById('auth-status');
-    const authBtn = document.getElementById('btn-show-auth');
     if (currentUser) {
         statusEl.innerText = `Logged in as ${currentUser} | Rating: ${currentRating} | Rank: ${getRankBadge(currentRating)}`;
-        authBtn.innerText = 'Logout';
     } else {
         statusEl.innerText = '';
-        authBtn.innerText = 'Login / Register';
-        document.getElementById('playerName').disabled = false;
     }
 }
 
-document.getElementById('btn-show-auth').addEventListener('click', () => {
-    if (currentUser) {
-        localStorage.removeItem('auth_token');
-        currentUser = null;
-        updateAuthStatus();
-    } else {
-        document.getElementById('auth-modal').style.display = 'flex';
-        document.getElementById('auth-error').innerText = '';
-    }
-});
-
-document.getElementById('btn-close-auth').addEventListener('click', () => {
-    document.getElementById('auth-modal').style.display = 'none';
-});
 
 async function handleAuth(isLogin) {
     const username = document.getElementById('auth-username').value;
@@ -249,10 +230,8 @@ async function handleAuth(isLogin) {
             localStorage.setItem('auth_token', data.token);
             currentUser = data.username;
             currentRating = data.rating;
-            document.getElementById('playerName').value = currentUser;
-            document.getElementById('playerName').disabled = true;
-            document.getElementById('auth-modal').style.display = 'none';
             updateAuthStatus();
+            showHomeScreen(currentUser);
         } else {
             errorEl.innerText = data.error;
         }
@@ -466,18 +445,10 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-btnLogin.addEventListener('click', () => {
-    const name = playerNameInput.value.trim();
-    if (name) {
-        showHomeScreen(name);
-    } else {
-        alert("Please enter a name to login");
-    }
-});
-
+// The btn-login and btn-register are now handled by handleAuth
+// btnGuestLogin is handled here
 btnGuestLogin.addEventListener('click', () => {
     const randomName = 'Guest_' + Math.floor(Math.random() * 10000);
-    playerNameInput.value = randomName;
     showHomeScreen(randomName);
 });
 

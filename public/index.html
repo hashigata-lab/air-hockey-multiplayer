@@ -526,19 +526,7 @@
         </div>
     </div>
 
-        <div id="auth-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center;">
-        <div class="options-content">
-            <h2>Account</h2>
-            <input type="text" id="auth-username" placeholder="Username" style="margin: 10px 0; padding: 10px; width: 100%;">
-            <input type="password" id="auth-password" placeholder="Password" style="margin: 10px 0; padding: 10px; width: 100%;">
-            <div style="display: flex; gap: 10px; justify-content: center;">
-                <button id="btn-login" style="flex: 1;">Login</button>
-                <button id="btn-register" style="flex: 1;">Register</button>
-            </div>
-            <p id="auth-error" style="color: #ff4444; font-size: 14px; margin-top: 10px;"></p>
-            <button id="btn-close-auth" style="margin-top: 20px;">Cancel</button>
-        </div>
-    </div>
+
 
     <div id="leaderboard-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center;">
         <div class="options-content" style="width: 400px; max-width: 90%;">
@@ -606,13 +594,20 @@
                 <div style="font-size: 16px; letter-spacing: 8px; text-transform: uppercase; color: #aaccff; text-shadow: 0 0 5px #8bb5e0; margin-top: -85px; position: relative; z-index: 2;">Awakening of the Four</div>
             </div>
         </h2>
-        <input type="text" id="playerName" placeholder="Enter Your Name" maxlength="15">
-        <div style="margin-top: 10px;">
-            <button id="btnLogin">Login</button>
-            <button id="btnGuestLogin" style="background: #4a7ab5; border-color: #336699; box-shadow: 0 4px 0 #336699;">Play as Guest</button>
+        <div style="max-width: 400px; margin: 0 auto;">
+            <input type="text" id="auth-username" placeholder="Username" style="margin: 10px 0; padding: 10px; width: 100%;">
+            <input type="password" id="auth-password" placeholder="Password" style="margin: 10px 0; padding: 10px; width: 100%;">
+            <div style="display: flex; gap: 10px; justify-content: center; margin-top: 10px;">
+                <button id="btn-login" style="flex: 1;">Login</button>
+                <button id="btn-register" style="flex: 1; background: #6c757d; border-color: #5a6268; box-shadow: 0 4px 0 #5a6268;">Register</button>
+            </div>
+            <div style="margin-top: 15px;">
+                <button id="btnGuestLogin" style="background: #4a7ab5; border-color: #336699; box-shadow: 0 4px 0 #336699; width: 100%;">Play as Guest</button>
+            </div>
+            <p id="auth-error" style="color: #ff4444; font-size: 14px; margin-top: 10px; text-align: center;"></p>
         </div>
-        <div style="margin-top: 20px;">
-            <button id="btn-show-auth" style="background: #1E90FF; border-color: #0000CD; box-shadow: 0 4px 0 #0000CD; display:none;">Login / Register</button>
+        
+        <div style="margin-top: 30px;">
             <button id="btn-show-leaderboard" style="background: #FFD700; color: #000; border-color: #DAA520; box-shadow: 0 4px 0 #DAA520;">Leaderboard</button>
         </div>
         <p id="auth-status" style="font-size: 16px; margin-top: 10px; color: #32CD32; font-weight: bold;"></p>
