@@ -40,6 +40,7 @@ function createInitialGameState() {
             right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0 }
         },
         status: 'WAITING',
+        stage: 'CYBERPUNK',
         winner: null
     };
 }
@@ -263,6 +264,16 @@ io.on('connection', (socket) => {
         const clientInfo = connectedClients[socket.id];
         if (clientInfo && clientInfo.roomId) {
             startGame(clientInfo.roomId);
+        }
+    });
+
+    socket.on('change_stage', (stageName) => {
+        const clientInfo = connectedClients[socket.id];
+        if (clientInfo && clientInfo.roomId) {
+            const roomState = rooms[clientInfo.roomId];
+            if (roomState && roomState.status === 'WAITING') {
+                roomState.stage = stageName;
+            }
         }
     });
 

@@ -30,6 +30,15 @@ let shakeFrames = 0;
 let puckTrails = [];
 let isGameLoopRunning = false;
 
+const bgImages = {
+    CYBERPUNK: new Image(),
+    RETRO: new Image(),
+    ICE: new Image()
+};
+bgImages.CYBERPUNK.src = 'assets/bg_cyberpunk.jpg';
+bgImages.RETRO.src = 'assets/bg_retro.jpg';
+bgImages.ICE.src = 'assets/bg_ice.jpg';
+
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -180,6 +189,13 @@ document.getElementById('btn-start-game').addEventListener('click', () => {
     socket.emit('start_game');
 });
 
+document.querySelectorAll('.stage-option').forEach(el => {
+    el.addEventListener('click', () => {
+        const stage = el.getAttribute('data-stage');
+        socket.emit('change_stage', stage);
+    });
+});
+
 socket.on('chat_message', (data) => {
     const p = document.createElement('div');
     p.innerText = `${data.name}: ${data.message}`;
@@ -236,6 +252,16 @@ socket.on('game_state', (state) => {
         if (lobbyPlayerCount) lobbyPlayerCount.innerText = activeCount;
         const btnStart = document.getElementById('btn-start-game');
         if (btnStart) btnStart.disabled = (activeCount < 2);
+        
+        if (state.stage) {
+            document.querySelectorAll('.stage-option').forEach(el => {
+                if (el.getAttribute('data-stage') === state.stage) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
     } else if (state.status === 'PLAYING') {
         const lobbyScreen = document.getElementById('lobby-screen');
         if (lobbyScreen && lobbyScreen.style.display === 'block') {
@@ -302,15 +328,37 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 function drawBoard() {
-    ctx.fillStyle = '#222';
-    ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
+    const stage = (serverState && serverState.stage) ? serverState.stage : 'CYBERPUNK';
+    
+    // 背景画像の描画
+    if (bgImages[stage] && bgImages[stage].complete) {
+        ctx.drawImage(bgImages[stage], 0, 0, BOARD_SIZE, BOARD_SIZE);
+        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
+    } else {
+        ctx.fillStyle = '#222';
+        ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
+    }
+
+    let centerLineColor = 'rgba(255, 255, 255, 0.2)';
+    let defaultWallColor = '#fff';
+    
+    if (stage === 'CYBERPUNK') {
+        centerLineColor = 'rgba(0, 255, 255, 0.3)';
+    } else if (stage === 'RETRO') {
+        centerLineColor = 'rgba(255, 100, 0, 0.4)';
+        defaultWallColor = '#ff6600';
+    } else if (stage === 'ICE') {
+        centerLineColor = 'rgba(200, 255, 255, 0.5)';
+        defaultWallColor = '#aaffff';
+    }
 
     const goalStart = (BOARD_SIZE - GOAL_SIZE) / 2;
     const goalEnd = goalStart + GOAL_SIZE;
 
     const getGoalColor = (role, defaultColor) => {
         if (serverState && serverState.players[role] && serverState.players[role].eliminated) {
-            return '#fff';
+            return defaultWallColor;
         }
         return defaultColor;
     };
@@ -318,30 +366,41 @@ function drawBoard() {
     const drawWall = (x1, y1, x2, y2, color, isGoal = false) => {
         ctx.strokeStyle = color;
         ctx.lineWidth = isGoal ? 15 : 8;
+        if (stage === 'RETRO' && !isGoal) {
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = color;
+        } else if (stage === 'CYBERPUNK' && !isGoal) {
+            ctx.shadowBlur = 5;
+            ctx.shadowColor = '#00ffff';
+        } else if (stage === 'ICE' && !isGoal) {
+            ctx.shadowBlur = 15;
+            ctx.shadowColor = '#ffffff';
+        }
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
         ctx.stroke();
+        ctx.shadowBlur = 0;
     };
 
-    drawWall(0, 0, goalStart, 0, '#fff');
+    drawWall(0, 0, goalStart, 0, defaultWallColor);
     drawWall(goalStart, 0, goalEnd, 0, getGoalColor('top', '#4444ff'), true);
-    drawWall(goalEnd, 0, BOARD_SIZE, 0, '#fff');
+    drawWall(goalEnd, 0, BOARD_SIZE, 0, defaultWallColor);
 
-    drawWall(0, BOARD_SIZE, goalStart, BOARD_SIZE, '#fff');
+    drawWall(0, BOARD_SIZE, goalStart, BOARD_SIZE, defaultWallColor);
     drawWall(goalStart, BOARD_SIZE, goalEnd, BOARD_SIZE, getGoalColor('bottom', '#ff4444'), true);
-    drawWall(goalEnd, BOARD_SIZE, BOARD_SIZE, BOARD_SIZE, '#fff');
+    drawWall(goalEnd, BOARD_SIZE, BOARD_SIZE, BOARD_SIZE, defaultWallColor);
 
-    drawWall(0, 0, 0, goalStart, '#fff');
+    drawWall(0, 0, 0, goalStart, defaultWallColor);
     drawWall(0, goalStart, 0, goalEnd, getGoalColor('left', '#44ff44'), true);
-    drawWall(0, goalEnd, 0, BOARD_SIZE, '#fff');
+    drawWall(0, goalEnd, 0, BOARD_SIZE, defaultWallColor);
 
-    drawWall(BOARD_SIZE, 0, BOARD_SIZE, goalStart, '#fff');
+    drawWall(BOARD_SIZE, 0, BOARD_SIZE, goalStart, defaultWallColor);
     drawWall(BOARD_SIZE, goalStart, BOARD_SIZE, goalEnd, getGoalColor('right', '#ffff44'), true);
-    drawWall(BOARD_SIZE, goalEnd, BOARD_SIZE, BOARD_SIZE, '#fff');
+    drawWall(BOARD_SIZE, goalEnd, BOARD_SIZE, BOARD_SIZE, defaultWallColor);
 
-    ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    ctx.lineWidth = 2;
+    ctx.strokeStyle = centerLineColor;
+    ctx.lineWidth = 3;
     ctx.beginPath();
     ctx.moveTo(0, BOARD_SIZE / 2);
     ctx.lineTo(BOARD_SIZE, BOARD_SIZE / 2);
