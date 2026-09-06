@@ -452,6 +452,9 @@ function joinGame(roomId) {
     socket.on('connect', () => {
         statusText.innerText = `Connected! Room: ${roomId}`;
         socket.emit('join_room', { roomId, playerName });
+        if (localSelectedSkin !== 'DEFAULT') {
+            socket.emit('change_skin', localSelectedSkin);
+        }
     });
 }
 
@@ -541,10 +544,15 @@ document.querySelectorAll('.size-option').forEach(el => {
     });
 });
 
+let localSelectedSkin = 'DEFAULT';
 document.querySelectorAll('.skin-option').forEach(el => {
     el.addEventListener('click', () => {
-        const skin = el.getAttribute('data-skin');
-        socket.emit('change_skin', skin);
+        document.querySelectorAll('.skin-option').forEach(o => o.classList.remove('selected'));
+        el.classList.add('selected');
+        localSelectedSkin = el.getAttribute('data-skin');
+        if (serverState && myRole) {
+            socket.emit('change_skin', localSelectedSkin);
+        }
     });
 });
 
