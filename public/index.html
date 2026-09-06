@@ -26,7 +26,7 @@
             position: absolute;
             top: -20%; left: -20%;
             width: 140%; height: 140%;
-            background-image: url('assets/bg_magic_circle.jpg');
+            background-image: url('assets/bg_twilight_ocean.jpg');
             background-size: cover;
             background-position: center;
             background-repeat: no-repeat;
@@ -118,16 +118,16 @@
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    background: rgba(10, 0, 10, 0.85);
-    backdrop-filter: blur(5px);
+    background: rgba(5, 10, 25, 0.7);
+    backdrop-filter: blur(10px);
     padding: 30px;
     border-radius: 12px;
-    box-shadow: 0 0 40px rgba(200, 0, 50, 0.4), inset 0 0 10px rgba(100,0,100,0.5);
+    box-shadow: 0 0 40px rgba(100, 150, 255, 0.3), inset 0 0 15px rgba(255,255,255,0.1);
     text-align: center;
     z-index: 100;
     width: min(420px, 90vw);
-    border: 2px solid #8b0000;
-    color: #e0e0e0;
+    border: 1px solid rgba(200, 220, 255, 0.4);
+    color: #e0e5ec;
 }
 #lobby-screen {
     max-width: 600px;
@@ -136,10 +136,11 @@
     overflow-y: auto;
 }
 #lobby h1, #lobby-screen h1, #lobby h2, #lobby-screen h2, #lobby h3, #lobby-screen h3 {
-    color: #ff003c;
-    text-shadow: 0 0 5px #ff003c, 0 0 10px #8b0000;
+    color: #e0e5ec;
+    text-shadow: 0 0 10px #8bb5e0, 0 0 20px #4a7ab5;
     margin-top: 0;
     font-family: 'Cinzel', 'Noto Serif JP', serif;
+    font-weight: 300;
 }
 #lobby h2 {
     font-size: clamp(24px, 6vw, 32px);
@@ -151,9 +152,9 @@
     margin: 10px 0;
     padding: 12px;
     box-sizing: border-box;
-    background: rgba(20, 0, 10, 0.9);
+    background: rgba(10, 20, 40, 0.6);
     color: #fff;
-    border: 2px solid #500;
+    border: 1px solid rgba(150, 200, 255, 0.4);
     border-radius: 4px;
     font-size: 16px;
     font-family: inherit;
@@ -162,27 +163,26 @@
 }
 #lobby input:focus {
     outline: none;
-    border-color: #ff003c;
-    box-shadow: 0 0 15px rgba(255,0,60,0.6);
+    border-color: #8bb5e0;
+    box-shadow: 0 0 15px rgba(139, 181, 224, 0.6);
 }
 #lobby button, #lobby-screen button {
-    padding: 12px 24px;
-    margin: 10px 5px;
-    background: #4a0000;
+    background: rgba(20, 40, 80, 0.6);
     color: #fff;
-    border: 1px solid #ff003c;
+    border: 1px solid rgba(150, 200, 255, 0.5);
+    padding: 10px 20px;
     border-radius: 4px;
-    cursor: pointer;
     font-size: 16px;
+    cursor: pointer;
     font-weight: bold;
     font-family: inherit;
-    box-shadow: 0 0 10px rgba(255,0,60,0.3);
     transition: all 0.2s ease-in-out;
     text-transform: uppercase;
+    text-shadow: 0 0 5px #8bb5e0;
 }
 #lobby button:hover, #lobby-screen button:hover {
-    background: #8b0000;
-    box-shadow: 0 0 20px rgba(255,0,60,0.8);
+    background: rgba(40, 80, 140, 0.8);
+    box-shadow: 0 0 20px rgba(139, 181, 224, 0.6);
     transform: scale(1.05);
 }
 #lobby button:active, #lobby-screen button:active {
@@ -206,11 +206,11 @@
 .player-list-container, .stage-selection-container, .skin-selection-container {
     margin: 20px 0;
     text-align: left;
-    background: rgba(20, 0, 10, 0.8);
+    background: rgba(10, 20, 40, 0.5);
     border-radius: 12px;
     padding: 15px;
-    border: 2px dashed #8b0000;
-    box-shadow: inset 0 0 10px rgba(255, 0, 60, 0.2);
+    border: 1px solid rgba(150, 200, 255, 0.3);
+    box-shadow: inset 0 0 10px rgba(100, 150, 255, 0.1);
 }
 #lobby-player-list {
     list-style: none;
@@ -220,16 +220,16 @@
 #lobby-player-list li {
     padding: 8px 10px;
     margin-bottom: 5px;
-    background: rgba(0, 0, 0, 0.8);
+    background: rgba(5, 10, 25, 0.7);
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 1.1em;
     font-weight: bold;
-    color: #ff003c;
-    border: 1px solid #500;
-    text-shadow: 0 0 5px #ff003c;
+    color: #cce0ff;
+    border: 1px solid rgba(100, 150, 255, 0.3);
+    text-shadow: 0 0 5px #8bb5e0;
 }
 .stage-options, .skin-options, .size-options {
     display: flex;
@@ -240,24 +240,24 @@
     flex: 1;
     cursor: pointer;
     text-align: center;
-    border: 3px solid transparent;
+    border: 1px solid transparent;
     border-radius: 12px;
     padding: 5px;
     transition: 0.2s;
-    background: rgba(30, 0, 10, 0.8);
-    color: #ccc;
+    background: rgba(10, 20, 40, 0.5);
+    color: #aaccff;
 }
 .stage-option:hover, .skin-option:hover, .size-option:hover {
-    background: rgba(60, 0, 20, 0.9);
+    background: rgba(30, 60, 100, 0.7);
     transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(255, 0, 60, 0.4);
+    box-shadow: 0 5px 15px rgba(100, 150, 255, 0.3);
 }
 .stage-option.selected, .skin-option.selected, .size-option.selected {
-    border-color: #ff003c;
-    background: rgba(80, 0, 20, 0.9);
-    box-shadow: 0 0 20px rgba(255, 0, 60, 0.8), inset 0 0 10px rgba(255, 0, 60, 0.5);
+    border-color: #8bb5e0;
+    background: rgba(40, 80, 140, 0.8);
+    box-shadow: 0 0 20px rgba(100, 150, 255, 0.6), inset 0 0 10px rgba(150, 200, 255, 0.3);
     color: #fff;
-    text-shadow: 0 0 5px #ff003c;
+    text-shadow: 0 0 5px #cce0ff;
 }
 .stage-option img, .skin-option img, .skin-option .default-skin {
     width: 100%;
@@ -543,7 +543,7 @@
     </div>
 
     <div id="lobby" class="animate__animated animate__zoomIn">
-        <h2>🔥 ディスクオブカオス 🔥<br><span style="font-size: 0.5em; letter-spacing: 3px;">～四天王覚醒～</span></h2>
+        <h2>ディスクオブカオス<br><span style="font-size: 0.5em; letter-spacing: 3px;">～四天王覚醒～</span></h2>
         <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
         <input type="text" id="roomIdInput" placeholder="Enter Room ID" maxlength="10">
         <div>
@@ -626,7 +626,7 @@
             </div>
         </div>
 
-        <button id="btn-start-game" class="animate__animated animate__flash animate__infinite animate__slower" disabled style="padding: 15px 30px; font-size: 18px; font-weight: bold; background: #4a0000; color: #fff; border: 2px solid #ff003c; border-radius: 8px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0 0 15px rgba(255,0,60,0.5); text-transform: uppercase;">Start Game</button>
+        <button id="btn-start-game" class="animate__animated animate__flash animate__infinite animate__slower" disabled style="padding: 15px 30px; font-size: 18px; font-weight: bold; background: rgba(26,43,76,0.8); color: #fff; border: 1px solid #8bb5e0; border-radius: 8px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0 0 15px rgba(100,150,255,0.5); text-shadow: 0 0 5px #cce0ff; text-transform: uppercase;">Start Game</button>
     </div>
 
     <div id="game-container">
