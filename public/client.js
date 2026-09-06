@@ -389,6 +389,12 @@ socket.on('game_state', (state) => {
     serverState = state;
     
     if (state.status === 'WAITING') {
+        document.getElementById('gameover-overlay').style.display = 'none';
+        document.getElementById('game-container').style.display = 'none';
+        
+        const lobbyScreen = document.getElementById('lobby-screen');
+        if (lobbyScreen) lobbyScreen.style.display = 'block';
+        
         bgmController.play('WAITING');
         const p = state.players;
         let activeCount = 0;
