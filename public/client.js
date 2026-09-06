@@ -440,8 +440,12 @@ function joinGame(roomId) {
 }
 
 btnCreateRoom.addEventListener('click', () => {
-    const roomId = generateRandomRoomId();
-    joinGame(roomId);
+    const roomId = roomIdInput.value.trim().toUpperCase();
+    if (roomId) {
+        joinGame(roomId);
+    } else {
+        alert("Please enter a Room ID to create");
+    }
 });
 
 btnJoinRoom.addEventListener('click', () => {
