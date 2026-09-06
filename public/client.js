@@ -831,19 +831,26 @@ function gameLoop() {
             sum += bgmController.freqData[i];
         }
         const avg = sum / 10; // 0 to 255
-        const scale = 1 + (avg / 255) * 0.5;
-        const rot = (avg / 255) * 15; // rotate up to 15deg
+        const rotArms = (avg / 255) * 120; // 0 to 120 deg
+        const rotLegs = (avg / 255) * 60; // 0 to 60 deg
+        const bounce = (avg / 255) * -50; // bounce up by 50px
         
         const memeL = document.getElementById('dancing-meme-left');
         const memeR = document.getElementById('dancing-meme-right');
-        if (memeL) {
-            memeL.style.display = 'block';
-            memeL.style.transform = `translateY(-50%) scale(${scale}) rotate(-${rot}deg)`;
-        }
-        if (memeR) {
-            memeR.style.display = 'block';
-            memeR.style.transform = `translateY(-50%) scale(${scale}) rotate(${rot}deg)`;
-        }
+        
+        [memeL, memeR].forEach(container => {
+            if (!container) return;
+            container.style.display = 'block';
+            container.style.transform = `translateY(calc(-50% + ${bounce}px))`;
+            const armL = container.querySelector('.meme-arm-left');
+            const armR = container.querySelector('.meme-arm-right');
+            const legL = container.querySelector('.meme-leg-left');
+            const legR = container.querySelector('.meme-leg-right');
+            if(armL) armL.style.transform = `rotate(${rotArms}deg)`;
+            if(armR) armR.style.transform = `rotate(-${rotArms}deg)`;
+            if(legL) legL.style.transform = `rotate(${rotLegs}deg)`;
+            if(legR) legR.style.transform = `rotate(-${rotLegs}deg)`;
+        });
     } else {
         const memeL = document.getElementById('dancing-meme-left');
         const memeR = document.getElementById('dancing-meme-right');

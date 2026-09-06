@@ -40,23 +40,54 @@
             z-index: 10;
         }
 
-        .dancing-meme {
+        .dancing-meme-container {
             position: absolute;
-            width: 15vw;
-            height: 15vw;
-            max-width: 200px;
-            max-height: 200px;
-            border-radius: 50%;
-            border: 5px solid #00ffff;
-            box-shadow: 0 0 20px #00ffff;
-            object-fit: cover;
             display: none;
+            width: 100px;
+            height: 250px;
             top: 50%;
             transform: translateY(-50%);
             z-index: 5;
         }
-        #dancing-meme-left { left: 5vw; }
-        #dancing-meme-right { right: 5vw; }
+        /* キャンバス(800px)の確実な外側に配置 */
+        #dancing-meme-left { left: calc(50% - 400px - 150px); }
+        #dancing-meme-right { right: calc(50% - 400px - 150px); }
+
+        .meme-head {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100px; height: 100px;
+            border-radius: 50%;
+            border: 4px solid #00ffff;
+            box-shadow: 0 0 10px #00ffff;
+            overflow: hidden;
+            z-index: 2;
+        }
+        .meme-head img {
+            width: 100%; height: 100%; object-fit: cover;
+        }
+        .meme-body {
+            position: absolute;
+            top: 100px; left: 45px;
+            width: 10px; height: 80px;
+            background: #00ffff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #00ffff;
+        }
+        .meme-arm, .meme-leg {
+            position: absolute;
+            width: 10px; height: 60px;
+            background: #00ffff;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #00ffff;
+            transform-origin: top center;
+        }
+        .meme-arm { top: 110px; }
+        .meme-arm-left { left: 45px; transform: rotate(30deg); }
+        .meme-arm-right { left: 45px; transform: rotate(-30deg); }
+        .meme-leg { top: 175px; }
+        .meme-leg-left { left: 45px; transform: rotate(20deg); }
+        .meme-leg-right { left: 45px; transform: rotate(-20deg); }
         h3 { margin: 0 0 10px 0; }
         p { margin: 5px 0; font-size: 14px; }
         
@@ -456,8 +487,22 @@
     </div>
 
     <div id="game-container">
-        <img id="dancing-meme-left" class="dancing-meme" src="assets/skin_doge.jpg" alt="Doge">
-        <img id="dancing-meme-right" class="dancing-meme" src="assets/skin_cat.jpg" alt="Cat">
+        <div id="dancing-meme-left" class="dancing-meme-container">
+            <div class="meme-head"><img src="assets/skin_doge.jpg" alt="Doge"></div>
+            <div class="meme-body"></div>
+            <div class="meme-arm meme-arm-left"></div>
+            <div class="meme-arm meme-arm-right"></div>
+            <div class="meme-leg meme-leg-left"></div>
+            <div class="meme-leg meme-leg-right"></div>
+        </div>
+        <div id="dancing-meme-right" class="dancing-meme-container">
+            <div class="meme-head"><img src="assets/skin_cat.jpg" alt="Cat"></div>
+            <div class="meme-body"></div>
+            <div class="meme-arm meme-arm-left"></div>
+            <div class="meme-arm meme-arm-right"></div>
+            <div class="meme-leg meme-leg-left"></div>
+            <div class="meme-leg meme-leg-right"></div>
+        </div>
         <div id="ui">
             <h3>Air Hockey</h3>
             <p id="status">Connecting...</p>
