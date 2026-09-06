@@ -27,6 +27,7 @@ const PADDLE_RADIUS = 35;
 let serverState = null;
 let myRole = null;
 let currentRoomId = null;
+let localPaddle = { x: 0, y: 0 }; // ローカルで予測描画するためのマレット座標
 
 // URLからroomIdを取得
 const urlParams = new URLSearchParams(window.location.search);
@@ -138,8 +139,29 @@ function handleInput(clientX, clientY) {
 
     const x = (clientX - rect.left) * scaleX;
     const y = (clientY - rect.top) * scaleY;
+    
+    let boundedX = x;
+    let boundedY = y;
+    
+    // クライアント側でも壁の制限をかける（予測描画用）
+    if (myRole === 'bottom') {
+        boundedX = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, x));
+        boundedY = Math.max(BOARD_SIZE / 2 + PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, y));
+    } else if (myRole === 'top') {
+        boundedX = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, x));
+        boundedY = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE / 2 - PADDLE_RADIUS, y));
+    } else if (myRole === 'left') {
+        boundedX = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE / 2 - PADDLE_RADIUS, x));
+        boundedY = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, y));
+    } else if (myRole === 'right') {
+        boundedX = Math.max(BOARD_SIZE / 2 + PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, x));
+        boundedY = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, y));
+    }
+    
+    localPaddle.x = boundedX;
+    localPaddle.y = boundedY;
 
-    socket.emit('player_input', { x, y });
+    socket.emit('player_input', { x: boundedX, y: boundedY });
 }
 
 canvas.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
@@ -268,7 +290,12 @@ function gameLoop() {
         for (const role in serverState.players) {
             const p = serverState.players[role];
             if (p.active && !p.eliminated) {
-                drawPaddle(p.x, p.y, p.color, role === myRole);
+                if (role === myRole) {
+                    // 自分のマレットはサーバーの応答を待たずにローカル座標で描画（ラグ対策）
+                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true);
+                } else {
+                    drawPaddle(p.x, p.y, p.color, false);
+                }
             }
         }
         
