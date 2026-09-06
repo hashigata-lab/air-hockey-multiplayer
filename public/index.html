@@ -401,6 +401,48 @@
             border-bottom-right-radius: 8px;
         }
         #chat-send:hover { background: #555; }
+        
+        #gameover-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 100;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+        #gameover-title {
+            font-size: 60px;
+            color: #00ffff;
+            text-shadow: 0 0 20px #00ffff;
+            margin-bottom: 40px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+        .btn-gameover {
+            padding: 15px 30px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 0 10px;
+            background: rgba(0,0,0,0.5);
+            transition: 0.2s;
+        }
+        #btn-restart {
+            color: #00ff00;
+            border: 2px solid #00ff00;
+            box-shadow: 0 0 10px #00ff00;
+        }
+        #btn-restart:hover { background: rgba(0,255,0,0.2); }
+        
+        #btn-return-lobby {
+            color: #ff0055;
+            border: 2px solid #ff0055;
+            box-shadow: 0 0 10px #ff0055;
+        }
+        #btn-return-lobby:hover { background: rgba(255,0,85,0.2); }
     </style>
 </head>
 <body>
@@ -506,9 +548,16 @@
         <div id="ui">
             <h3>Air Hockey</h3>
             <p id="status">Connecting...</p>
-            <p id="debug-info">-</p>
+            <p id="debug-info"></p>
         </div>
         <canvas id="gameCanvas" width="800" height="800"></canvas>
+        <div id="gameover-overlay">
+            <h2 id="gameover-title">WINNER: P1</h2>
+            <div>
+                <button id="btn-restart" class="btn-gameover">Restart Game</button>
+                <button id="btn-return-lobby" class="btn-gameover">Return to Lobby</button>
+            </div>
+        </div>
     </div>
 
     <div id="chat-container">

@@ -427,8 +427,10 @@ socket.on('game_state', (state) => {
                 }
             });
         }
+        document.getElementById('gameover-overlay').style.display = 'none';
     } else if (state.status === 'PLAYING') {
         bgmController.play(state.stage || 'CYBERPUNK');
+        document.getElementById('gameover-overlay').style.display = 'none';
         const lobbyScreen = document.getElementById('lobby-screen');
         if (lobbyScreen && lobbyScreen.style.display === 'block') {
             lobbyScreen.style.display = 'none';
@@ -438,6 +440,10 @@ socket.on('game_state', (state) => {
             isGameLoopRunning = true;
             gameLoop();
         }
+    } else if (state.status === 'GAMEOVER') {
+        const overlay = document.getElementById('gameover-overlay');
+        overlay.style.display = 'flex';
+        document.getElementById('gameover-title').innerText = `WINNER: ${state.winner || 'NONE'}`;
     }
 
     if (state.events && state.events.length > 0) {
@@ -857,15 +863,6 @@ function drawUI() {
         ctx.fillStyle = '#fff';
         ctx.font = '32px sans-serif';
         ctx.fillText(`Waiting for players... (Need 2+)`, BOARD_SIZE/2, BOARD_SIZE/2 + 10);
-    } else if (serverState.status === 'GAMEOVER') {
-        ctx.fillStyle = 'rgba(0,0,0,0.7)';
-        ctx.fillRect(0, BOARD_SIZE/2 - 60, BOARD_SIZE, 120);
-        ctx.fillStyle = '#ffdd44';
-        ctx.font = '40px sans-serif';
-        ctx.fillText(`WINNER: ${serverState.winner}`, BOARD_SIZE/2, BOARD_SIZE/2);
-        ctx.fillStyle = '#fff';
-        ctx.font = '20px sans-serif';
-        ctx.fillText('Restarting soon...', BOARD_SIZE/2, BOARD_SIZE/2 + 40);
     }
 }
 
@@ -982,5 +979,18 @@ function gameLoop() {
 
     requestAnimationFrame(gameLoop);
 }
+
+document.getElementById('btn-restart').addEventListener('click', () => {
+    socket.emit('restart_game');
+});
+
+document.getElementById('btn-return-lobby').addEventListener('click', () => {
+    socket.emit('return_lobby');
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('lobby').style.display = 'block';
+    document.getElementById('gameover-overlay').style.display = 'none';
+    isGameLoopRunning = false;
+});
 
 gameLoop();

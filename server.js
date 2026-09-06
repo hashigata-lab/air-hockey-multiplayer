@@ -118,13 +118,7 @@ function handleGoal(roomId, role, puckIndex) {
         
         io.to(roomId).emit('system_message', `GAME OVER! Winner is ${winnerName}`);
         
-        setTimeout(() => {
-            if (rooms[roomId]) {
-                rooms[roomId].status = 'WAITING';
-                rooms[roomId].winner = null;
-                resetPucks(rooms[roomId]);
-            }
-        }, 5000);
+        io.to(roomId).emit('system_message', `GAME OVER! Winner is ${winnerName}`);
     } else {
         if (roomState.pucks.length === 0) {
             setTimeout(() => {
@@ -267,6 +261,24 @@ io.on('connection', (socket) => {
         }
     });
 
+    socket.on('restart_game', () => {
+        const clientInfo = connectedClients[socket.id];
+        if (clientInfo && clientInfo.roomId) {
+            const roomState = rooms[clientInfo.roomId];
+            if (roomState && roomState.status === 'GAMEOVER') {
+                roomState.status = 'WAITING';
+                roomState.winner = null;
+                resetPucks(roomState);
+                io.to(clientInfo.roomId).emit('game_state', roomState);
+                io.to(clientInfo.roomId).emit('system_message', 'Game restarted. Waiting for players to be ready.');
+            }
+        }
+    });
+
+    socket.on('return_lobby', () => {
+        socket.disconnect(); // Triggers the existing disconnect logic to leave room
+    });
+
     socket.on('change_stage', (stageName) => {
         const clientInfo = connectedClients[socket.id];
         if (clientInfo && clientInfo.roomId) {
@@ -350,7 +362,6 @@ io.on('connection', (socket) => {
                         const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
                         roomState.winner = winnerName;
                         io.to(roomId).emit('system_message', `GAME OVER! Winner is ${winnerName}`);
-                        setTimeout(() => { if (rooms[roomId]) { rooms[roomId].status = 'WAITING'; resetPucks(rooms[roomId]); } }, 5000);
                     }
                 }
 
