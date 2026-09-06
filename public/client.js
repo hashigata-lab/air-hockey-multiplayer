@@ -292,6 +292,9 @@ btnCloseOptions.addEventListener('click', () => {
 btnExitRoom.addEventListener('click', () => {
     optionsModal.style.display = 'none';
     socket.emit('return_lobby');
+    if (audioCtx) {
+        audioCtx.close();
+    }
     window.location.reload();
 });
 bgmVolumeSlider.addEventListener('input', (e) => {
@@ -454,6 +457,9 @@ btnGuestLogin.addEventListener('click', () => {
 
 btnBackToTitle.addEventListener('click', () => {
     sessionStorage.removeItem('playerName');
+    if (audioCtx) {
+        audioCtx.close();
+    }
     window.location.reload();
 });
 
@@ -1201,6 +1207,9 @@ document.getElementById('btn-restart').addEventListener('click', () => {
 
 document.getElementById('btn-return-lobby').addEventListener('click', () => {
     socket.emit('return_lobby');
+    if (audioCtx) {
+        audioCtx.close();
+    }
     window.location.reload();
 });
 
