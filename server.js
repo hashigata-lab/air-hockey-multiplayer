@@ -138,22 +138,25 @@ async function handleGameOver(roomState, winnerRole) {
     const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
     roomState.winner = winnerName;
     
-    // Update Ratings in MongoDB
+    
+    // Update Ratings in MongoDB (Skip for Practice Mode)
     const pointsChanges = {};
-    for (let role of ROLES) {
-        const player = roomState.players[role];
-        if (player.active || player.eliminated) {
-            if (player.name) {
-                try {
-                    const dbUser = await User.findOne({ username: player.name });
-                    if (dbUser) {
-                        const change = (role === winnerRole) ? 30 : -10;
-                        dbUser.rating += change;
-                        await dbUser.save();
-                        pointsChanges[role] = change;
+    if (!roomState.isPractice) {
+        for (let role of ROLES) {
+            const player = roomState.players[role];
+            if (player.active || player.eliminated) {
+                if (player.name) {
+                    try {
+                        const dbUser = await User.findOne({ username: player.name });
+                        if (dbUser) {
+                            const change = (role === winnerRole) ? 30 : -10;
+                            dbUser.rating += change;
+                            await dbUser.save();
+                            pointsChanges[role] = change;
+                        }
+                    } catch (e) {
+                        console.error("DB Error updating rating:", e);
                     }
-                } catch (e) {
-                    console.error("DB Error updating rating:", e);
                 }
             }
         }
@@ -343,6 +346,47 @@ function applyItemEffect(roomId, type, puck) {
 }
 
 io.on('connection', (socket) => {
+    socket.on('create_practice_room', (playerName) => {
+        if (connectedClients[socket.id]) return;
+        
+        const roomId = 'PRACTICE_' + Math.floor(Math.random() * 10000);
+        socket.join(roomId);
+        socket.roomId = roomId;
+        
+        rooms[roomId] = createInitialGameState();
+        const roomState = rooms[roomId];
+        roomState.isPractice = true;
+        roomState.boardSize = 800; // Force size for 2 players
+        roomState.maxPlayers = 2;
+        
+        // P1: Human (Bottom)
+        socket.role = 'bottom';
+        roomState.players['bottom'].active = true;
+        roomState.players['bottom'].id = socket.id;
+        roomState.players['bottom'].name = playerName || 'Player';
+        roomState.players['bottom'].lives = INITIAL_LIVES;
+        
+        // P2: CPU (Top)
+        roomState.players['top'].active = true;
+        roomState.players['top'].id = 'CPU_1';
+        roomState.players['top'].name = 'CPU';
+        roomState.players['top'].lives = INITIAL_LIVES;
+        roomState.players['top'].skin = 'FROG'; // Or randomize
+        
+        // Disable left and right
+        roomState.players['left'].active = false;
+        roomState.players['left'].eliminated = true;
+        roomState.players['right'].active = false;
+        roomState.players['right'].eliminated = true;
+        
+        connectedClients[socket.id] = { roomId, role: 'bottom', name: roomState.players['bottom'].name };
+        
+        socket.emit('room_joined', { roomId, role: 'bottom', players: roomState.players });
+        io.to(roomId).emit('game_state', roomState);
+        io.to(roomId).emit('chat_message', { name: 'System', message: `${playerName} created Practice Room ${roomId}` });
+        io.to(roomId).emit('chat_message', { name: 'System', message: 'CPU has joined the room.' });
+    });
+
     socket.on('join_room', ({ roomId, playerName }) => {
         if (connectedClients[socket.id]) return; 
 
@@ -560,6 +604,54 @@ setInterval(() => {
             io.to(roomId).emit('game_state', roomState);
             roomState.events = [];
             continue;
+        }
+
+        // CPU AI Logic for Practice Mode
+        if (roomState.isPractice && roomState.players['top'].active && !roomState.players['top'].eliminated) {
+            let cpu = roomState.players['top'];
+            let targetPuck = roomState.pucks[0];
+            
+            // Find closest puck in the top half
+            let closestDist = Infinity;
+            for (let puck of roomState.pucks) {
+                if (puck.y < BOARD_SIZE / 2) {
+                    let dist = Math.hypot(puck.x - cpu.x, puck.y - cpu.y);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        targetPuck = puck;
+                    }
+                }
+            }
+            
+            if (!targetPuck) targetPuck = roomState.pucks[0]; // fallback
+            
+            if (targetPuck) {
+                let targetX = targetPuck.x;
+                let targetY = targetPuck.y;
+                
+                // If puck is in bottom half, retreat to center of goal
+                if (targetPuck.y > BOARD_SIZE / 2) {
+                    targetX = BOARD_SIZE / 2;
+                    targetY = 100; 
+                }
+
+                const speed = 7; // CPU max speed per frame
+                let dx = targetX - cpu.x;
+                let dy = targetY - cpu.y;
+                let distance = Math.hypot(dx, dy);
+                
+                if (distance > speed) {
+                    cpu.x += (dx / distance) * speed;
+                    cpu.y += (dy / distance) * speed;
+                } else {
+                    cpu.x = targetX;
+                    cpu.y = targetY;
+                }
+                
+                // Boundaries for Top player (CPU)
+                cpu.x = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, cpu.x));
+                cpu.y = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE / 2 - PADDLE_RADIUS, cpu.y));
+            }
         }
 
         // Item Spawning

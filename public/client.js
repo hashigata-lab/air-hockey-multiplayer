@@ -10,6 +10,7 @@ const btnGuestLogin = document.getElementById('btnGuestLogin');
 const roomIdInput = document.getElementById('roomIdInput');
 const btnCreateRoom = document.getElementById('btnCreateRoom');
 const btnJoinRoom = document.getElementById('btnJoinRoom');
+const btnPracticeMode = document.getElementById('btnPracticeMode');
 const btnBackToTitle = document.getElementById('btnBackToTitle');
 const btnGotoSkinSelect = document.getElementById('btn-goto-skin-select');
 const skinSelectScreen = document.getElementById('skin-select-screen');
@@ -532,6 +533,11 @@ btnCreateRoom.addEventListener('click', () => {
     } else {
         alert("Please enter a Room ID to create");
     }
+});
+
+btnPracticeMode.addEventListener('click', () => {
+    if (!socket.connected) socket.connect();
+    socket.emit('create_practice_room', currentUser);
 });
 
 btnJoinRoom.addEventListener('click', () => {
