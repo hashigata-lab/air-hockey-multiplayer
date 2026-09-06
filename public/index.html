@@ -206,10 +206,11 @@
 .player-list-container, .stage-selection-container, .skin-selection-container {
     margin: 20px 0;
     text-align: left;
-    background: rgba(255, 255, 255, 0.5);
+    background: rgba(20, 0, 10, 0.8);
     border-radius: 12px;
     padding: 15px;
-    border: 2px dashed #FFB6C1;
+    border: 2px dashed #8b0000;
+    box-shadow: inset 0 0 10px rgba(255, 0, 60, 0.2);
 }
 #lobby-player-list {
     list-style: none;
@@ -219,15 +220,16 @@
 #lobby-player-list li {
     padding: 8px 10px;
     margin-bottom: 5px;
-    background: rgba(255, 255, 255, 0.8);
+    background: rgba(0, 0, 0, 0.8);
     border-radius: 8px;
     display: flex;
     justify-content: space-between;
     align-items: center;
     font-size: 1.1em;
     font-weight: bold;
-    color: #333;
-    border: 1px solid #ddd;
+    color: #ff003c;
+    border: 1px solid #500;
+    text-shadow: 0 0 5px #ff003c;
 }
 .stage-options, .skin-options, .size-options {
     display: flex;
@@ -242,15 +244,20 @@
     border-radius: 12px;
     padding: 5px;
     transition: 0.2s;
-    background: rgba(255,255,255,0.6);
+    background: rgba(30, 0, 10, 0.8);
+    color: #ccc;
 }
 .stage-option:hover, .skin-option:hover, .size-option:hover {
-    background: rgba(255,255,255,1);
+    background: rgba(60, 0, 20, 0.9);
     transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 0, 60, 0.4);
 }
 .stage-option.selected, .skin-option.selected, .size-option.selected {
-    border-color: #32CD32;
-    background: rgba(50, 205, 50, 0.2);
+    border-color: #ff003c;
+    background: rgba(80, 0, 20, 0.9);
+    box-shadow: 0 0 20px rgba(255, 0, 60, 0.8), inset 0 0 10px rgba(255, 0, 60, 0.5);
+    color: #fff;
+    text-shadow: 0 0 5px #ff003c;
 }
 .stage-option img, .skin-option img, .skin-option .default-skin {
     width: 100%;
@@ -619,7 +626,7 @@
             </div>
         </div>
 
-        <button id="btn-start-game" class="animate__animated animate__flash animate__infinite animate__slower" disabled style="padding: 15px 30px; font-size: 18px; font-weight: bold; background: #00ff00; color: #000; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">Start Game</button>
+        <button id="btn-start-game" class="animate__animated animate__flash animate__infinite animate__slower" disabled style="padding: 15px 30px; font-size: 18px; font-weight: bold; background: #4a0000; color: #fff; border: 2px solid #ff003c; border-radius: 8px; cursor: pointer; margin-top: 10px; width: 100%; box-shadow: 0 0 15px rgba(255,0,60,0.5); text-transform: uppercase;">Start Game</button>
     </div>
 
     <div id="game-container">
