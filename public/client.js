@@ -49,6 +49,19 @@ skinImages.DOGE.src = 'assets/skin_doge.jpg';
 skinImages.CAT.src = 'assets/skin_cat.jpg';
 skinImages.FROG.src = 'assets/skin_frog.jpg';
 
+const itemImages = {
+    SIZE_UP: new Image(),
+    SIZE_DOWN: new Image(),
+    BARRIER: new Image(),
+    SPEED_UP: new Image(),
+    MULTI_PUCK: new Image()
+};
+itemImages.SIZE_UP.src = 'assets/item_size_up.jpg';
+itemImages.SIZE_DOWN.src = 'assets/item_size_down.jpg';
+itemImages.BARRIER.src = 'assets/item_barrier.jpg';
+itemImages.SPEED_UP.src = 'assets/item_speed_up.jpg';
+itemImages.MULTI_PUCK.src = 'assets/item_multi_puck.jpg';
+
 function initAudio() {
     if (!audioCtx) {
         audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -715,23 +728,26 @@ function drawItem(x, y, type) {
 
     ctx.save();
     ctx.translate(x, y);
-    // Inner glowing orb
-    const grad = ctx.createRadialGradient(0, 0, currentRadius * 0.2, 0, 0, currentRadius);
-    grad.addColorStop(0, '#ffffff');
-    grad.addColorStop(0.5, color);
-    grad.addColorStop(1, 'rgba(0,0,0,0)');
-    
-    ctx.fillStyle = grad;
+    // Draw Item Image with circular clip
     ctx.beginPath();
     ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
-    ctx.fill();
+    ctx.clip();
 
-    ctx.shadowBlur = 0;
-    ctx.fillStyle = '#000';
-    ctx.font = '18px sans-serif';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(icon, 0, 2);
+    if (itemImages[type] && itemImages[type].complete) {
+        ctx.drawImage(itemImages[type], -currentRadius, -currentRadius, currentRadius * 2, currentRadius * 2);
+    } else {
+        ctx.fillStyle = color;
+        ctx.fill();
+    }
+    
+    // glowing border
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = color;
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
+    ctx.stroke();
     ctx.restore();
 }
 
