@@ -336,3 +336,16 @@ AI画像生成機能を活用し、3種類の異なるテーマの背景画像�
 ### 19.2. 音量制御ロジック
 * `client.js` で、スライダーの値の変更を検知し、`bgmController` の `volume` プロパティおよび、`playSound` で生成する `gainNode.gain.value` に反映させます。
 * ユーザーが設定した音量値はブラウザの `localStorage` に保存し、次回アクセス時にも同じ音量が適用されるようにします。
+
+## 20. 追加開発フェーズ (踊るミームキャラ・MAD動画風演出)
+* **フェーズ 20: 音楽に同期したミームキャラのアニメーション**
+  対戦中のゲーム画面（キャンバス）の左右の空きスペースを利用し、BGMのビートに合わせてミームキャラ達が踊る、MAD動画のようなカオスで楽しい演出を追加します。
+
+### 20.1. Web Audio API (AnalyserNode) による楽曲解析
+* BGMを再生している `<audio>` 要素を `MediaElementAudioSourceNode` として Web Audio API に接続し、`AnalyserNode` を間に挟みます。
+* これにより、再生中のBGMの周波数データや音量（ビートの強さ）をリアルタイムに JavaScript (`client.js`) で取得できるようにします。
+
+### 20.2. ミームキャラの配置とアニメーション連動
+* `index.html` の `#game-container` 内（キャンバスの左右）に、Doge、Crying Cat、Smug Frog などのスキン画像を配置するコンテナ (`#dancing-memes-left`, `#dancing-memes-right`) を作成します。
+* `gameLoop` などの毎フレームの描画処理の中で `AnalyserNode` から音量データを取得し、その数値に応じてミーム画像のCSS `transform` (`scale`, `rotate`, `translateY` など) を動的に変化させます。
+* 音楽の低音が響いた瞬間にキャラが大きく跳ねたり、震えたりすることで、まるで音に合わせて踊っているかのような視覚効果を実現します。

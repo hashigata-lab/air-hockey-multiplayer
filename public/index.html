@@ -39,6 +39,24 @@
             pointer-events: none;
             z-index: 10;
         }
+
+        .dancing-meme {
+            position: absolute;
+            width: 15vw;
+            height: 15vw;
+            max-width: 200px;
+            max-height: 200px;
+            border-radius: 50%;
+            border: 5px solid #00ffff;
+            box-shadow: 0 0 20px #00ffff;
+            object-fit: cover;
+            display: none;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 5;
+        }
+        #dancing-meme-left { left: 5vw; }
+        #dancing-meme-right { right: 5vw; }
         h3 { margin: 0 0 10px 0; }
         p { margin: 5px 0; font-size: 14px; }
         
@@ -438,6 +456,8 @@
     </div>
 
     <div id="game-container">
+        <img id="dancing-meme-left" class="dancing-meme" src="assets/skin_doge.jpg" alt="Doge">
+        <img id="dancing-meme-right" class="dancing-meme" src="assets/skin_cat.jpg" alt="Cat">
         <div id="ui">
             <h3>Air Hockey</h3>
             <p id="status">Connecting...</p>

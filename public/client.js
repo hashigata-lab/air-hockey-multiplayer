@@ -72,6 +72,9 @@ const bgmController = {
     currentTheme: null,
     hasStarted: false,
     volume: 0.4,
+    analyserNode: null,
+    freqData: null,
+    bgmGain: null,
     
     init() {
         let savedVol = parseFloat(localStorage.getItem('bgmVolume'));
@@ -81,11 +84,34 @@ const bgmController = {
             this.audioElements[key].volume = this.volume;
         }
     },
+
+    initWebAudio() {
+        if (this.analyserNode) return;
+        
+        this.bgmGain = audioCtx.createGain();
+        this.bgmGain.gain.value = this.volume;
+        
+        this.analyserNode = audioCtx.createAnalyser();
+        this.analyserNode.fftSize = 256;
+        this.freqData = new Uint8Array(this.analyserNode.frequencyBinCount);
+        
+        this.bgmGain.connect(this.analyserNode);
+        this.analyserNode.connect(audioCtx.destination);
+
+        for (let key in this.audioElements) {
+            const source = audioCtx.createMediaElementSource(this.audioElements[key]);
+            source.connect(this.bgmGain);
+        }
+    },
     
     updateVolume(vol) {
         this.volume = vol;
-        for (let key in this.audioElements) {
-            this.audioElements[key].volume = this.volume;
+        if (this.bgmGain) {
+            this.bgmGain.gain.value = vol;
+        } else {
+            for (let key in this.audioElements) {
+                this.audioElements[key].volume = this.volume;
+            }
         }
         localStorage.setItem('bgmVolume', vol);
     },
@@ -238,6 +264,7 @@ function generateRandomRoomId() {
 
 function joinGame(roomId) {
     initAudio();
+    bgmController.initWebAudio();
     if (!bgmController.hasStarted) {
         bgmController.hasStarted = true;
         bgmController.play('WAITING');
@@ -795,6 +822,33 @@ function gameLoop() {
     if (gameContainer.style.display !== 'block') {
         requestAnimationFrame(gameLoop);
         return;
+    }
+
+    if (bgmController.analyserNode && serverState && serverState.status === 'PLAYING') {
+        bgmController.analyserNode.getByteFrequencyData(bgmController.freqData);
+        let sum = 0;
+        for (let i = 0; i < 10; i++) {
+            sum += bgmController.freqData[i];
+        }
+        const avg = sum / 10; // 0 to 255
+        const scale = 1 + (avg / 255) * 0.5;
+        const rot = (avg / 255) * 15; // rotate up to 15deg
+        
+        const memeL = document.getElementById('dancing-meme-left');
+        const memeR = document.getElementById('dancing-meme-right');
+        if (memeL) {
+            memeL.style.display = 'block';
+            memeL.style.transform = `translateY(-50%) scale(${scale}) rotate(-${rot}deg)`;
+        }
+        if (memeR) {
+            memeR.style.display = 'block';
+            memeR.style.transform = `translateY(-50%) scale(${scale}) rotate(${rot}deg)`;
+        }
+    } else {
+        const memeL = document.getElementById('dancing-meme-left');
+        const memeR = document.getElementById('dancing-meme-right');
+        if (memeL) memeL.style.display = 'none';
+        if (memeR) memeR.style.display = 'none';
     }
 
     ctx.save();
