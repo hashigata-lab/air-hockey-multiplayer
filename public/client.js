@@ -11,6 +11,16 @@ const roomIdInput = document.getElementById('roomIdInput');
 const btnCreateRoom = document.getElementById('btnCreateRoom');
 const btnJoinRoom = document.getElementById('btnJoinRoom');
 const btnBackToTitle = document.getElementById('btnBackToTitle');
+const btnGotoGacha = document.getElementById('btn-goto-gacha');
+const gachaScreen = document.getElementById('gacha-screen');
+const btnGachaBack = document.getElementById('btn-gacha-back');
+const btnGachaSpin = document.getElementById('btn-gacha-spin');
+const gogoLamp = document.getElementById('gogo-lamp');
+const gachaResultSkin = document.getElementById('gacha-result-skin');
+const gachaSkinIcon = document.getElementById('gacha-skin-icon');
+const gachaSkinName = document.getElementById('gacha-skin-name');
+const gachaSkinRarity = document.getElementById('gacha-skin-rarity');
+const gachaStatus = document.getElementById('gacha-status');
 
 const statusText = document.getElementById('status');
 const debugInfo = document.getElementById('debug-info');
@@ -33,6 +43,8 @@ let shakeFrames = 0;
 let flashFrames = 0;
 let puckTrails = [];
 let isGameLoopRunning = false;
+let ownedSkins = ['DEFAULT', 'DOGE', 'CAT', 'FROG'];
+const gakoAudio = new Audio('assets/ziyagura-gako.mp3');
 
 const bgImages = {
     CHAOS_VOID: new Image(),
@@ -183,6 +195,7 @@ async function checkAuth() {
             if (res.ok) {
                 currentUser = data.username;
                 currentRating = data.rating;
+                if (data.ownedSkins) ownedSkins = data.ownedSkins;
                 document.getElementById('playerName').value = currentUser;
                 document.getElementById('playerName').disabled = true;
                 updateAuthStatus();
@@ -230,6 +243,7 @@ async function handleAuth(isLogin) {
             localStorage.setItem('auth_token', data.token);
             currentUser = data.username;
             currentRating = data.rating;
+            if (data.ownedSkins) ownedSkins = data.ownedSkins;
             updateAuthStatus();
             showHomeScreen(currentUser);
         } else {
@@ -464,6 +478,16 @@ function showHomeScreen(playerName) {
     homeScreen.style.display = 'block';
     document.getElementById('home-player-name').innerText = playerName;
     
+    // Hide Gacha for guests
+    const token = localStorage.getItem('auth_token');
+    if (!token || playerName.startsWith('Guest_')) {
+        btnGotoGacha.style.display = 'none';
+    } else {
+        btnGotoGacha.style.display = 'block';
+    }
+
+    renderSkinOptions();
+    
     // Start lobby music on home screen
     bgmController.initWebAudio();
     if (!bgmController.hasStarted) {
@@ -545,15 +569,198 @@ document.querySelectorAll('.size-option').forEach(el => {
 });
 
 let localSelectedSkin = 'DEFAULT';
-document.querySelectorAll('.skin-option').forEach(el => {
-    el.addEventListener('click', () => {
-        document.querySelectorAll('.skin-option').forEach(o => o.classList.remove('selected'));
-        el.classList.add('selected');
-        localSelectedSkin = el.getAttribute('data-skin');
-        if (serverState && myRole) {
-            socket.emit('change_skin', localSelectedSkin);
+
+function renderSkinOptions() {
+    const container = document.getElementById('skin-options');
+    container.innerHTML = '';
+    
+    // Always render DEFAULT
+    let html = `
+        <div class="skin-option ${localSelectedSkin === 'DEFAULT' ? 'selected' : ''}" data-skin="DEFAULT">
+            <div class="default-skin"></div>
+            <span>Default</span>
+        </div>
+    `;
+    
+    // Base skins for backward compatibility and basic visual map
+    const baseSkins = {
+        'DOGE': { img: 'assets/skin_doge.jpg', name: 'Doge' },
+        'CAT': { img: 'assets/skin_cat.jpg', name: 'Crying Cat' },
+        'FROG': { img: 'assets/skin_frog.jpg', name: 'Smug Frog' }
+    };
+    
+    // Add owned skins
+    ownedSkins.forEach(skinId => {
+        if (skinId === 'DEFAULT') return; // Already handled
+        
+        let imgTag = '';
+        let displayName = skinId;
+        
+        if (baseSkins[skinId]) {
+            imgTag = `<img src="${baseSkins[skinId].img}" alt="${baseSkins[skinId].name}">`;
+            displayName = baseSkins[skinId].name;
+        } else {
+            // For newly gacha'd skins, create a visual representation if no image is available
+            let bgColor = '#555';
+            if (skinId.startsWith('R_')) bgColor = '#4da6ff'; // Rare blue
+            if (skinId.startsWith('SSR_')) bgColor = '#ff3399'; // SSR pink
+            if (skinId.startsWith('UR_')) bgColor = '#ffbf00'; // UR gold
+            if (skinId.startsWith('SECRET_')) bgColor = 'linear-gradient(45deg, #000, #ff00ff, #fff)'; // Secret
+            
+            imgTag = `<div style="width:100%; height:80px; border-radius:5px; margin-bottom:5px; background: ${bgColor}; box-shadow: inset 0 0 10px rgba(0,0,0,0.5);"></div>`;
+            displayName = skinId.replace('_', ' ');
         }
+        
+        html += `
+            <div class="skin-option ${localSelectedSkin === skinId ? 'selected' : ''}" data-skin="${skinId}">
+                ${imgTag}
+                <span>${displayName}</span>
+            </div>
+        `;
     });
+    
+    container.innerHTML = html;
+    
+    // Re-attach event listeners
+    document.querySelectorAll('.skin-option').forEach(el => {
+        el.addEventListener('click', () => {
+            document.querySelectorAll('.skin-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            localSelectedSkin = el.getAttribute('data-skin');
+            if (serverState && myRole) {
+                socket.emit('change_skin', localSelectedSkin);
+            }
+        });
+    });
+}
+
+// Gacha Logic
+btnGotoGacha.addEventListener('click', () => {
+    homeScreen.style.display = 'none';
+    gachaScreen.style.display = 'block';
+    resetGachaUI();
+});
+
+btnGachaBack.addEventListener('click', () => {
+    gachaScreen.style.display = 'none';
+    homeScreen.style.display = 'block';
+    renderSkinOptions();
+});
+
+function resetGachaUI() {
+    gogoLamp.style.opacity = '0.3';
+    gogoLamp.style.textShadow = '0 0 2px #550000';
+    gogoLamp.style.color = '#330000';
+    gachaResultSkin.style.display = 'none';
+    gachaStatus.innerText = 'Ready to spin...';
+    btnGachaSpin.disabled = false;
+    btnGachaSpin.style.transform = 'scale(1)';
+}
+
+btnGachaSpin.addEventListener('click', async () => {
+    const token = localStorage.getItem('auth_token');
+    if (!token) return;
+    
+    btnGachaSpin.disabled = true;
+    btnGachaSpin.style.transform = 'scale(0.95)';
+    gachaStatus.innerText = 'Spinning...';
+    gachaResultSkin.style.display = 'none';
+    gogoLamp.style.opacity = '0.3';
+    gogoLamp.style.textShadow = '0 0 2px #550000';
+    gogoLamp.style.color = '#330000';
+    
+    // Simulate reel spinning sound using AudioContext
+    initAudio();
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(100, audioCtx.currentTime);
+    osc.frequency.linearRampToValueAtTime(300, audioCtx.currentTime + 1.5);
+    gain.gain.setValueAtTime(0.1, audioCtx.currentTime);
+    gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.5);
+    osc.connect(gain);
+    gain.connect(audioCtx.destination);
+    osc.start();
+    osc.stop(audioCtx.currentTime + 1.5);
+
+    try {
+        const res = await fetch('/api/gacha', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            ownedSkins = data.ownedSkins;
+            
+            // Wait for dramatic effect
+            setTimeout(() => {
+                gachaStatus.innerText = '';
+                gachaResultSkin.style.display = 'block';
+                
+                let bgColor = '#555';
+                let rarityColor = '#aaa';
+                let isHighRarity = false;
+                
+                if (data.rarity === 'RARE') {
+                    bgColor = '#4da6ff';
+                    rarityColor = '#4da6ff';
+                } else if (data.rarity === 'SSR') {
+                    bgColor = '#ff3399';
+                    rarityColor = '#ff3399';
+                    isHighRarity = true;
+                } else if (data.rarity === 'UR') {
+                    bgColor = '#ffbf00';
+                    rarityColor = '#ffbf00';
+                    isHighRarity = true;
+                } else if (data.rarity === 'SECRET') {
+                    bgColor = 'linear-gradient(45deg, #000, #ff00ff, #fff)';
+                    rarityColor = '#ff00ff';
+                    isHighRarity = true;
+                }
+
+                gachaSkinIcon.style.background = bgColor;
+                gachaSkinName.innerText = data.skinId.replace('_', ' ');
+                gachaSkinRarity.innerText = data.rarity;
+                gachaSkinRarity.style.color = rarityColor;
+                
+                if (isHighRarity) {
+                    // PEKARU! (GOGO Lamp lights up)
+                    gogoLamp.style.opacity = '1';
+                    gogoLamp.style.color = '#ff99ff';
+                    gogoLamp.style.textShadow = '0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 60px #ff00ff, 0 0 80px #fff';
+                    // Play specific gako sound
+                    gakoAudio.currentTime = 0;
+                    gakoAudio.play().catch(e => console.log('Audio play failed:', e));
+                } else {
+                    // Normal stop sound
+                    const oscStop = audioCtx.createOscillator();
+                    const gainStop = audioCtx.createGain();
+                    oscStop.type = 'square';
+                    oscStop.frequency.setValueAtTime(400, audioCtx.currentTime);
+                    oscStop.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+                    gainStop.gain.setValueAtTime(0.2, audioCtx.currentTime);
+                    gainStop.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+                    oscStop.connect(gainStop);
+                    gainStop.connect(audioCtx.destination);
+                    oscStop.start();
+                    oscStop.stop(audioCtx.currentTime + 0.2);
+                }
+                
+                btnGachaSpin.disabled = false;
+                btnGachaSpin.style.transform = 'scale(1)';
+            }, 1500); // 1.5 seconds wait
+        } else {
+            gachaStatus.innerText = 'Error: ' + data.error;
+            btnGachaSpin.disabled = false;
+            btnGachaSpin.style.transform = 'scale(1)';
+        }
+    } catch (e) {
+        gachaStatus.innerText = 'Network error';
+        btnGachaSpin.disabled = false;
+        btnGachaSpin.style.transform = 'scale(1)';
+    }
 });
 
 socket.on('chat_message', (data) => {

@@ -48,7 +48,7 @@ app.post('/api/login', async (req, res) => {
         if (!match) return res.status(400).json({ error: 'Invalid credentials' });
         
         const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_SECRET || 'secret123');
-        res.json({ token, username: user.username, rating: user.rating });
+        res.json({ token, username: user.username, rating: user.rating, ownedSkins: user.ownedSkins });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
@@ -61,9 +61,46 @@ app.post('/api/me', async (req, res) => {
         const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
         const user = await User.findById(decoded.userId);
         if (!user) return res.status(404).json({ error: 'User not found' });
-        res.json({ username: user.username, rating: user.rating });
+        res.json({ username: user.username, rating: user.rating, ownedSkins: user.ownedSkins });
     } catch (err) {
         res.status(401).json({ error: 'Invalid token' });
+    }
+});
+
+app.post('/api/gacha', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(401).json({ error: 'No token' });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
+        const user = await User.findById(decoded.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        
+        const roll = Math.random() * 100;
+        let skinId = '';
+        let rarity = '';
+        if (roll < 0.5) {
+            rarity = 'SECRET';
+            skinId = 'SECRET_1';
+        } else if (roll < 8.0) {
+            rarity = 'UR';
+            skinId = `UR_${Math.floor(Math.random() * 3) + 1}`;
+        } else if (roll < 30.0) {
+            rarity = 'SSR';
+            skinId = `SSR_${Math.floor(Math.random() * 10) + 1}`;
+        } else {
+            rarity = 'RARE';
+            skinId = `R_${Math.floor(Math.random() * 16) + 1}`;
+        }
+
+        const isNew = !user.ownedSkins.includes(skinId);
+        if (isNew) {
+            user.ownedSkins.push(skinId);
+            await user.save();
+        }
+
+        res.json({ skinId, rarity, isNew, ownedSkins: user.ownedSkins });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
     }
 });
 

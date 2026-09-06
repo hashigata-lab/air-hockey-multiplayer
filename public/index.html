@@ -619,11 +619,11 @@
         <p style="text-align: center; color: #aaccff; font-size: 18px; margin-bottom: 30px;">Welcome, <span id="home-player-name" style="color: #fff; font-weight: bold;"></span></p>
         
         <input type="text" id="roomIdInput" placeholder="Enter Room ID" maxlength="10">
-        <div>
-            <button id="btnCreateRoom" class="animate__animated animate__pulse animate__infinite animate__slower">Create Room</button>
-            <button id="btnJoinRoom">Join Room</button>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="btnCreateRoom" style="flex: 1;" class="animate__animated animate__pulse animate__infinite animate__slower">Create Room</button>
+            <button id="btnJoinRoom" style="flex: 1;">Join Room</button>
         </div>
-
+        <button id="btn-goto-gacha" style="background: linear-gradient(45deg, #ff007f, #7f00ff); border-color: #ff00ff; box-shadow: 0 4px 0 #cc00cc; width: 100%; margin-bottom: 20px; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #fff;">🎰 Play Gacha 🎰</button>
         <div class="skin-selection-container" style="margin-top: 20px;">
             <h3 style="margin-bottom: 10px; font-size: 16px; color: #aaccff; text-transform: uppercase;">Select Your Skin</h3>
             <div class="skin-options" id="skin-options">
@@ -648,6 +648,32 @@
 
         <div style="margin-top: 30px;">
             <button id="btnBackToTitle" style="background: #555; border-color: #333; box-shadow: 0 4px 0 #333;">Logout</button>
+        </div>
+    </div>
+
+    <!-- Gacha Screen -->
+    <div id="gacha-screen" style="display: none; text-align: center;">
+        <h1 style="color: #FFD700; text-shadow: 0 0 10px #FF8C00, 0 0 20px #FF8C00; font-size: 36px; margin-bottom: 20px;">SKIN GACHA</h1>
+        <div id="gacha-machine" style="background: #111; border: 4px solid #333; border-radius: 10px; padding: 30px; max-width: 400px; margin: 0 auto; position: relative; box-shadow: inset 0 0 50px #000, 0 0 20px #000;">
+            <!-- GOGO Lamp -->
+            <div id="gogo-lamp" style="font-family: Impact, sans-serif; font-style: italic; font-size: 28px; color: #330000; text-shadow: 0 0 2px #550000; position: absolute; bottom: 20px; left: 20px; transform: rotate(-10deg); opacity: 0.3; transition: all 0.1s;">
+                GOGO! <br>
+                <span style="font-size: 16px; color: #220000;">CHANCE</span>
+            </div>
+            
+            <div id="gacha-result-area" style="height: 150px; background: #000; border: 2px solid #555; margin-bottom: 30px; display: flex; flex-direction: column; justify-content: center; align-items: center; border-radius: 5px;">
+                <p id="gacha-status" style="color: #aaa; font-size: 18px;">Ready to spin...</p>
+                <div id="gacha-result-skin" style="display: none; margin-top: 10px;">
+                    <div id="gacha-skin-icon" style="width: 60px; height: 60px; border-radius: 50%; margin: 0 auto;"></div>
+                    <p id="gacha-skin-name" style="margin-top: 5px; font-weight: bold;"></p>
+                    <p id="gacha-skin-rarity" style="font-size: 14px; margin-top: 2px;"></p>
+                </div>
+            </div>
+
+            <button id="btn-gacha-spin" style="width: 120px; height: 120px; border-radius: 50%; background: radial-gradient(circle, #ff4444 0%, #aa0000 100%); border: 8px solid #550000; color: #fff; font-size: 24px; font-weight: bold; cursor: pointer; box-shadow: 0 10px 0 #550000, 0 15px 15px rgba(0,0,0,0.5); text-shadow: 1px 1px 2px #000; transition: transform 0.1s, box-shadow 0.1s;">SPIN</button>
+        </div>
+        <div style="margin-top: 30px;">
+            <button id="btn-gacha-back" style="background: #555; border-color: #333; box-shadow: 0 4px 0 #333; max-width: 200px;">Back to Home</button>
         </div>
     </div>
 
