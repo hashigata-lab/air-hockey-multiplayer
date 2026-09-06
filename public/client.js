@@ -27,6 +27,7 @@ const ITEM_RADIUS = 20;
 
 let audioCtx = null;
 let shakeFrames = 0;
+let flashFrames = 0;
 let puckTrails = [];
 let isGameLoopRunning = false;
 
@@ -277,7 +278,10 @@ socket.on('game_state', (state) => {
     if (state.events && state.events.length > 0) {
         state.events.forEach(ev => {
             playSound(ev);
-            if (ev === 'hyper_smash') shakeFrames = 8;
+            if (ev === 'hyper_smash') {
+                shakeFrames = 25;
+                flashFrames = 5;
+            }
             if (ev === 'wall' && state.pucks.some(p => p.isHyper)) shakeFrames = 3;
         });
     }
@@ -426,13 +430,19 @@ function drawCircle(x, y, radius, color, isMe = false) {
 
 function drawPuck(puck, i) {
     if (puck.isHyper) {
-        if (puckTrails[i]) {
-            puckTrails[i].forEach(t => {
-                ctx.fillStyle = `rgba(255, 60, 0, ${t.life})`;
+        if (puckTrails[i] && puckTrails[i].length > 1) {
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            for (let j = 0; j < puckTrails[i].length - 1; j++) {
+                const t1 = puckTrails[i][j];
+                const t2 = puckTrails[i][j + 1];
                 ctx.beginPath();
-                ctx.arc(t.x, t.y, PUCK_RADIUS * t.life, 0, Math.PI * 2);
-                ctx.fill();
-            });
+                ctx.moveTo(t1.x, t1.y);
+                ctx.lineTo(t2.x, t2.y);
+                ctx.strokeStyle = `rgba(255, 100, 0, ${t1.life})`;
+                ctx.lineWidth = (PUCK_RADIUS * 1.5) * t1.life;
+                ctx.stroke();
+            }
         }
         
         ctx.shadowBlur = 10;
@@ -446,14 +456,27 @@ function drawPuck(puck, i) {
 
 function drawPaddle(x, y, color, isMe, radius, sp = 0) {
     if (sp >= 100) {
+        ctx.save();
+        ctx.translate(x, y);
+        const time = Date.now() / 150;
+        ctx.rotate(time);
         ctx.shadowBlur = 10;
         ctx.shadowColor = color;
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(x, y, radius + 10 + Math.sin(Date.now() / 80) * 3, 0, Math.PI * 2);
+        const spikes = 12;
+        const outer = radius + 15;
+        const inner = radius + 5;
+        for (let k = 0; k < spikes * 2; k++) {
+            const angle = (k * Math.PI) / spikes;
+            const r = (k % 2 === 0) ? outer : inner;
+            if (k === 0) ctx.moveTo(r * Math.cos(angle), r * Math.sin(angle));
+            else ctx.lineTo(r * Math.cos(angle), r * Math.sin(angle));
+        }
+        ctx.closePath();
         ctx.stroke();
-        ctx.shadowBlur = 0;
+        ctx.restore();
     }
 
     drawCircle(x, y, radius, color, isMe);
@@ -636,7 +659,7 @@ function gameLoop() {
 
     ctx.save();
     if (shakeFrames > 0) {
-        let maxShake = (shakeFrames / 8) * 10;
+        let maxShake = (shakeFrames / 15) * 15;
         ctx.translate((Math.random() - 0.5) * maxShake, (Math.random() - 0.5) * maxShake);
         shakeFrames--;
     }
@@ -651,7 +674,7 @@ function gameLoop() {
                 if (!puckTrails[i]) puckTrails[i] = [];
                 if (p.isHyper) {
                     puckTrails[i].push({ x: p.x, y: p.y, life: 1.0 });
-                    if (puckTrails[i].length > 6) puckTrails[i].shift();
+                    if (puckTrails[i].length > 10) puckTrails[i].shift();
                 } else {
                     puckTrails[i] = [];
                 }
@@ -659,7 +682,7 @@ function gameLoop() {
         }
         for (let i = 0; i < puckTrails.length; i++) {
             for (let j = puckTrails[i].length - 1; j >= 0; j--) {
-                puckTrails[i][j].life -= 0.25;
+                puckTrails[i][j].life -= 0.1;
                 if (puckTrails[i][j].life <= 0) puckTrails[i].splice(j, 1);
             }
         }
@@ -695,6 +718,13 @@ function gameLoop() {
     }
 
     drawUI();
+
+    if (flashFrames > 0) {
+        ctx.fillStyle = `rgba(255, 255, 255, ${flashFrames / 5})`;
+        ctx.fillRect(-50, -50, BOARD_SIZE + 100, BOARD_SIZE + 100);
+        flashFrames--;
+    }
+
     ctx.restore();
 
     requestAnimationFrame(gameLoop);
