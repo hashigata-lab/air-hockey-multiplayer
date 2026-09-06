@@ -23,6 +23,7 @@ const BOARD_SIZE = 800;
 const GOAL_SIZE = 240;
 const PUCK_RADIUS = 15;
 const PADDLE_RADIUS = 35;
+const ITEM_RADIUS = 20;
 
 let serverState = null;
 let myRole = null;
@@ -143,19 +144,21 @@ function handleInput(clientX, clientY) {
     let boundedX = x;
     let boundedY = y;
     
+    let pr = serverState && serverState.players[myRole] ? serverState.players[myRole].paddleRadius : PADDLE_RADIUS;
+    
     // クライアント側でも壁の制限をかける（予測描画用）
     if (myRole === 'bottom') {
-        boundedX = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, x));
-        boundedY = Math.max(BOARD_SIZE / 2 + PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, y));
+        boundedX = Math.max(pr, Math.min(BOARD_SIZE - pr, x));
+        boundedY = Math.max(BOARD_SIZE / 2 + pr, Math.min(BOARD_SIZE - pr, y));
     } else if (myRole === 'top') {
-        boundedX = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, x));
-        boundedY = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE / 2 - PADDLE_RADIUS, y));
+        boundedX = Math.max(pr, Math.min(BOARD_SIZE - pr, x));
+        boundedY = Math.max(pr, Math.min(BOARD_SIZE / 2 - pr, y));
     } else if (myRole === 'left') {
-        boundedX = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE / 2 - PADDLE_RADIUS, x));
-        boundedY = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, y));
+        boundedX = Math.max(pr, Math.min(BOARD_SIZE / 2 - pr, x));
+        boundedY = Math.max(pr, Math.min(BOARD_SIZE - pr, y));
     } else if (myRole === 'right') {
-        boundedX = Math.max(BOARD_SIZE / 2 + PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, x));
-        boundedY = Math.max(PADDLE_RADIUS, Math.min(BOARD_SIZE - PADDLE_RADIUS, y));
+        boundedX = Math.max(BOARD_SIZE / 2 + pr, Math.min(BOARD_SIZE - pr, x));
+        boundedY = Math.max(pr, Math.min(BOARD_SIZE - pr, y));
     }
     
     localPaddle.x = boundedX;
@@ -238,12 +241,50 @@ function drawPuck(x, y) {
     drawCircle(x, y, PUCK_RADIUS, '#ddd');
 }
 
-function drawPaddle(x, y, color, isMe) {
-    drawCircle(x, y, PADDLE_RADIUS, color, isMe);
+function drawPaddle(x, y, color, isMe, radius) {
+    drawCircle(x, y, radius, color, isMe);
     ctx.fillStyle = 'rgba(0,0,0,0.3)';
     ctx.beginPath();
-    ctx.arc(x, y, PADDLE_RADIUS * 0.4, 0, Math.PI * 2);
+    ctx.arc(x, y, radius * 0.4, 0, Math.PI * 2);
     ctx.fill();
+}
+
+function drawBarrier(role) {
+    const goalStart = (BOARD_SIZE - GOAL_SIZE) / 2;
+    const goalEnd = goalStart + GOAL_SIZE;
+    ctx.strokeStyle = '#00ffff';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    if (role === 'bottom') { ctx.moveTo(goalStart, BOARD_SIZE - 120); ctx.lineTo(goalEnd, BOARD_SIZE - 120); }
+    if (role === 'top') { ctx.moveTo(goalStart, 120); ctx.lineTo(goalEnd, 120); }
+    if (role === 'left') { ctx.moveTo(120, goalStart); ctx.lineTo(120, goalEnd); }
+    if (role === 'right') { ctx.moveTo(BOARD_SIZE - 120, goalStart); ctx.lineTo(BOARD_SIZE - 120, goalEnd); }
+    
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = '#00ffff';
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+}
+
+function drawItem(x, y, type) {
+    let color = '#fff';
+    let icon = '?';
+    if (type === 'SIZE_UP') { color = '#44ff44'; icon = '+'; }
+    if (type === 'SIZE_DOWN') { color = '#ff44ff'; icon = '-'; }
+    if (type === 'BARRIER') { color = '#44ccff'; icon = 'B'; }
+    if (type === 'SPEED_UP') { color = '#ff4444'; icon = '>>'; }
+    if (type === 'MULTI_PUCK') { color = '#ffff44'; icon = 'x2'; }
+
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(x, y, ITEM_RADIUS, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 16px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText(icon, x, y);
 }
 
 function drawUI() {
@@ -287,21 +328,34 @@ function gameLoop() {
     drawBoard();
 
     if (serverState) {
+        // アイテムの描画
+        if (serverState.items) {
+            for (let item of serverState.items) {
+                drawItem(item.x, item.y, item.type);
+            }
+        }
+        
+        // プレイヤーとバリアの描画
         for (const role in serverState.players) {
             const p = serverState.players[role];
             if (p.active && !p.eliminated) {
+                if (p.barrierActive) drawBarrier(role);
+                
                 if (role === myRole) {
-                    // 自分のマレットはサーバーの応答を待たずにローカル座標で描画（ラグ対策）
-                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true);
+                    drawPaddle(localPaddle.x, localPaddle.y, p.color, true, p.paddleRadius);
                 } else {
-                    drawPaddle(p.x, p.y, p.color, false);
+                    drawPaddle(p.x, p.y, p.color, false, p.paddleRadius);
                 }
             }
         }
         
-        if (serverState.puck.x > 0 && serverState.puck.x < BOARD_SIZE &&
-            serverState.puck.y > 0 && serverState.puck.y < BOARD_SIZE) {
-            drawPuck(serverState.puck.x, serverState.puck.y);
+        // パックの描画
+        if (serverState.pucks) {
+            for (let puck of serverState.pucks) {
+                if (puck.x > 0 && puck.x < BOARD_SIZE && puck.y > 0 && puck.y < BOARD_SIZE) {
+                    drawPuck(puck.x, puck.y);
+                }
+            }
         }
     }
 
