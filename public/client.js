@@ -679,23 +679,59 @@ function drawItem(x, y, type) {
     if (type === 'SPEED_UP') { color = '#ff4444'; icon = '⚡'; }
     if (type === 'MULTI_PUCK') { color = '#ffff44'; icon = '☄️'; }
 
-    const scale = 1 + Math.sin(Date.now() / 200) * 0.1;
+    const time = Date.now() / 200;
+    const scale = 1 + Math.sin(time) * 0.1;
     const currentRadius = ITEM_RADIUS * scale;
 
     ctx.save();
-    ctx.shadowBlur = 5;
-    ctx.shadowColor = color;
-    ctx.fillStyle = color;
+    ctx.translate(x, y);
+
+    // Rotating outer ring
+    ctx.rotate(time * 0.5);
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 6, 2, 6]);
     ctx.beginPath();
-    ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
+    ctx.arc(0, 0, currentRadius + 8, 0, Math.PI * 2);
+    ctx.shadowBlur = 10;
+    ctx.shadowColor = color;
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Reverse rotating inner hexagon
+    ctx.rotate(-time * 1.2);
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) {
+        const angle = (i * Math.PI * 2) / 6;
+        const hx = Math.cos(angle) * (currentRadius + 3);
+        const hy = Math.sin(angle) * (currentRadius + 3);
+        if (i === 0) ctx.moveTo(hx, hy);
+        else ctx.lineTo(hx, hy);
+    }
+    ctx.closePath();
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+
+    ctx.save();
+    ctx.translate(x, y);
+    // Inner glowing orb
+    const grad = ctx.createRadialGradient(0, 0, currentRadius * 0.2, 0, 0, currentRadius);
+    grad.addColorStop(0, '#ffffff');
+    grad.addColorStop(0.5, color);
+    grad.addColorStop(1, 'rgba(0,0,0,0)');
+    
+    ctx.fillStyle = grad;
+    ctx.beginPath();
+    ctx.arc(0, 0, currentRadius, 0, Math.PI * 2);
     ctx.fill();
 
     ctx.shadowBlur = 0;
     ctx.fillStyle = '#000';
-    ctx.font = '20px sans-serif';
+    ctx.font = '18px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(icon, x, y + 2);
+    ctx.fillText(icon, 0, 2);
     ctx.restore();
 }
 
