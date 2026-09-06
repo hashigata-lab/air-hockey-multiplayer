@@ -277,8 +277,8 @@ socket.on('game_state', (state) => {
     if (state.events && state.events.length > 0) {
         state.events.forEach(ev => {
             playSound(ev);
-            if (ev === 'hyper_smash') shakeFrames = 15;
-            if (ev === 'wall' && state.pucks.some(p => p.isHyper)) shakeFrames = 8;
+            if (ev === 'hyper_smash') shakeFrames = 8;
+            if (ev === 'wall' && state.pucks.some(p => p.isHyper)) shakeFrames = 3;
         });
     }
 });
@@ -333,10 +333,10 @@ function drawBoard() {
     // 背景画像の描画
     if (bgImages[stage] && bgImages[stage].complete) {
         ctx.drawImage(bgImages[stage], 0, 0, BOARD_SIZE, BOARD_SIZE);
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
+        ctx.fillStyle = 'rgba(0,0,0,0.8)';
         ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     } else {
-        ctx.fillStyle = '#222';
+        ctx.fillStyle = '#111';
         ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     }
 
@@ -365,15 +365,15 @@ function drawBoard() {
 
     const drawWall = (x1, y1, x2, y2, color, isGoal = false) => {
         ctx.strokeStyle = color;
-        ctx.lineWidth = isGoal ? 15 : 8;
+        ctx.lineWidth = isGoal ? 10 : 6;
         if (stage === 'RETRO' && !isGoal) {
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 4;
             ctx.shadowColor = color;
         } else if (stage === 'CYBERPUNK' && !isGoal) {
-            ctx.shadowBlur = 5;
+            ctx.shadowBlur = 2;
             ctx.shadowColor = '#00ffff';
         } else if (stage === 'ICE' && !isGoal) {
-            ctx.shadowBlur = 15;
+            ctx.shadowBlur = 6;
             ctx.shadowColor = '#ffffff';
         }
         ctx.beginPath();
@@ -435,7 +435,7 @@ function drawPuck(puck, i) {
             });
         }
         
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = '#ff3300';
         drawCircle(puck.x, puck.y, PUCK_RADIUS, '#ffaa00');
         ctx.shadowBlur = 0;
@@ -446,12 +446,12 @@ function drawPuck(puck, i) {
 
 function drawPaddle(x, y, color, isMe, radius, sp = 0) {
     if (sp >= 100) {
-        ctx.shadowBlur = 20;
+        ctx.shadowBlur = 10;
         ctx.shadowColor = color;
         ctx.strokeStyle = color;
         ctx.lineWidth = 3;
         ctx.beginPath();
-        ctx.arc(x, y, radius + 15 + Math.sin(Date.now() / 80) * 5, 0, Math.PI * 2);
+        ctx.arc(x, y, radius + 10 + Math.sin(Date.now() / 80) * 3, 0, Math.PI * 2);
         ctx.stroke();
         ctx.shadowBlur = 0;
     }
@@ -474,7 +474,7 @@ function drawBarrier(role) {
     if (role === 'left') { ctx.moveTo(120, goalStart); ctx.lineTo(120, goalEnd); }
     if (role === 'right') { ctx.moveTo(BOARD_SIZE - 120, goalStart); ctx.lineTo(BOARD_SIZE - 120, goalEnd); }
     
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 5;
     ctx.shadowColor = '#00ffff';
     ctx.stroke();
     ctx.shadowBlur = 0;
@@ -489,11 +489,11 @@ function drawItem(x, y, type) {
     if (type === 'SPEED_UP') { color = '#ff4444'; icon = '⚡'; }
     if (type === 'MULTI_PUCK') { color = '#ffff44'; icon = '☄️'; }
 
-    const scale = 1 + Math.sin(Date.now() / 200) * 0.15;
+    const scale = 1 + Math.sin(Date.now() / 200) * 0.1;
     const currentRadius = ITEM_RADIUS * scale;
 
     ctx.save();
-    ctx.shadowBlur = 15;
+    ctx.shadowBlur = 5;
     ctx.shadowColor = color;
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -559,7 +559,7 @@ function drawUI() {
         ctx.fillRect(-50, 45, 100, 8);
         
         if (sp >= 100) {
-            ctx.shadowBlur = 10;
+            ctx.shadowBlur = 5;
             ctx.shadowColor = '#ffff00';
             ctx.fillStyle = '#ffff00';
         } else {
@@ -636,7 +636,7 @@ function gameLoop() {
 
     ctx.save();
     if (shakeFrames > 0) {
-        let maxShake = (shakeFrames / 15) * 20;
+        let maxShake = (shakeFrames / 8) * 10;
         ctx.translate((Math.random() - 0.5) * maxShake, (Math.random() - 0.5) * maxShake);
         shakeFrames--;
     }
@@ -651,7 +651,7 @@ function gameLoop() {
                 if (!puckTrails[i]) puckTrails[i] = [];
                 if (p.isHyper) {
                     puckTrails[i].push({ x: p.x, y: p.y, life: 1.0 });
-                    if (puckTrails[i].length > 15) puckTrails[i].shift();
+                    if (puckTrails[i].length > 6) puckTrails[i].shift();
                 } else {
                     puckTrails[i] = [];
                 }
@@ -659,7 +659,7 @@ function gameLoop() {
         }
         for (let i = 0; i < puckTrails.length; i++) {
             for (let j = puckTrails[i].length - 1; j >= 0; j--) {
-                puckTrails[i][j].life -= 0.15;
+                puckTrails[i][j].life -= 0.25;
                 if (puckTrails[i][j].life <= 0) puckTrails[i].splice(j, 1);
             }
         }
