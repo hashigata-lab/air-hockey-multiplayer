@@ -29,6 +29,7 @@ const connectedClients = {}; // socket.id -> { roomId, role, name }
 
 function createInitialGameState() {
     return {
+        events: [],
         pucks: [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null }],
         items: [],
         itemSpawnTimer: 0,
@@ -44,6 +45,7 @@ function createInitialGameState() {
 }
 
 function resetPucks(roomState) {
+    roomState.events = [];
     roomState.pucks = [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null }];
     roomState.items = [];
     roomState.itemSpawnTimer = 0;
@@ -84,6 +86,8 @@ function handleGoal(roomId, role, puckIndex) {
     const roomState = rooms[roomId];
     if (!roomState || roomState.status !== 'PLAYING') return;
 
+    roomState.events.push('goal');
+
     let p = roomState.players[role];
     if (!p.eliminated) {
         p.lives--;
@@ -103,6 +107,7 @@ function handleGoal(roomId, role, puckIndex) {
     
     if (aliveRoles.length <= 1) {
         roomState.status = 'GAMEOVER';
+        roomState.events.push('gameover');
         const winnerRole = aliveRoles.length === 1 ? aliveRoles[0] : null;
         const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
         roomState.winner = winnerName;
@@ -352,6 +357,7 @@ setInterval(() => {
         if (roomState.itemSpawnTimer >= 12000) { // Every 12 seconds
             roomState.itemSpawnTimer = 0;
             if (roomState.items.length < 3) {
+                roomState.events.push('item_spawn');
                 roomState.items.push({
                     x: 250 + Math.random() * 300,
                     y: 250 + Math.random() * 300,
@@ -384,6 +390,7 @@ setInterval(() => {
                 } else {
                     puck.x = PUCK_RADIUS;
                     puck.vx *= -1;
+                    roomState.events.push('wall');
                 }
             } else if (puck.x + PUCK_RADIUS > BOARD_SIZE) {
                 if (puck.y > goalStart && puck.y < goalEnd && !roomState.players['right'].eliminated) {
@@ -392,6 +399,7 @@ setInterval(() => {
                 } else {
                     puck.x = BOARD_SIZE - PUCK_RADIUS;
                     puck.vx *= -1;
+                    roomState.events.push('wall');
                 }
             }
 
@@ -404,6 +412,7 @@ setInterval(() => {
                 } else {
                     puck.y = PUCK_RADIUS;
                     puck.vy *= -1;
+                    roomState.events.push('wall');
                 }
             } else if (puck.y + PUCK_RADIUS > BOARD_SIZE) {
                 if (puck.x > goalStart && puck.x < goalEnd && !roomState.players['bottom'].eliminated) {
@@ -412,6 +421,7 @@ setInterval(() => {
                 } else {
                     puck.y = BOARD_SIZE - PUCK_RADIUS;
                     puck.vy *= -1;
+                    roomState.events.push('wall');
                 }
             }
 
@@ -435,6 +445,7 @@ setInterval(() => {
                         puck.vx = Math.cos(angle) * hitPower;
                         puck.vy = Math.sin(angle) * hitPower;
                         puck.lastHitter = role;
+                        roomState.events.push('hit');
                     }
 
                     // バリア判定
@@ -450,6 +461,7 @@ setInterval(() => {
                                 if (Math.abs(puck.y - bY1) < PUCK_RADIUS) {
                                     puck.y = role === 'bottom' ? bY1 - PUCK_RADIUS : bY1 + PUCK_RADIUS;
                                     puck.vy *= -1;
+                                    roomState.events.push('wall');
                                 }
                             }
                         } else {
@@ -457,6 +469,7 @@ setInterval(() => {
                                 if (Math.abs(puck.x - bX1) < PUCK_RADIUS) {
                                     puck.x = role === 'right' ? bX1 - PUCK_RADIUS : bX1 + PUCK_RADIUS;
                                     puck.vx *= -1;
+                                    roomState.events.push('wall');
                                 }
                             }
                         }
@@ -472,12 +485,14 @@ setInterval(() => {
                 let distance = Math.sqrt(dx * dx + dy * dy);
                 if (distance < PUCK_RADIUS + ITEM_RADIUS) {
                     applyItemEffect(roomId, item.type, puck);
+                    roomState.events.push('item_get');
                     roomState.items.splice(j, 1);
                 }
             }
         }
 
         io.to(roomId).emit('game_state', roomState);
+        roomState.events = [];
     }
 }, INTERVAL);
 
