@@ -289,13 +289,42 @@ btnOptions.addEventListener('click', () => {
 btnCloseOptions.addEventListener('click', () => {
     optionsModal.style.display = 'none';
 });
+function returnToHome() {
+    isGameLoopRunning = false;
+    serverState = null;
+    myRole = null;
+    
+    // Suspend audio context temporarily to kill any lingering oscillators
+    if (audioCtx && audioCtx.state === 'running') {
+        audioCtx.suspend();
+    }
+
+    socket.disconnect(); // Will trigger 'disconnect' event
+
+    document.getElementById('game-container').style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'none';
+    document.getElementById('gameover-overlay').style.display = 'none';
+    
+    // Stop any playing BGM
+    for (let key in bgmController.audioElements) {
+        bgmController.audioElements[key].pause();
+        bgmController.audioElements[key].currentTime = 0;
+    }
+    bgmController.currentTheme = null;
+
+    const savedName = sessionStorage.getItem('playerName') || 'Guest';
+    showHomeScreen(savedName);
+    
+    // Resume audio context
+    if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+    }
+}
+
 btnExitRoom.addEventListener('click', () => {
     optionsModal.style.display = 'none';
     socket.emit('return_lobby');
-    if (audioCtx) {
-        audioCtx.close();
-    }
-    window.location.reload();
+    returnToHome();
 });
 bgmVolumeSlider.addEventListener('input', (e) => {
     bgmController.updateVolume(parseFloat(e.target.value));
@@ -1207,10 +1236,7 @@ document.getElementById('btn-restart').addEventListener('click', () => {
 
 document.getElementById('btn-return-lobby').addEventListener('click', () => {
     socket.emit('return_lobby');
-    if (audioCtx) {
-        audioCtx.close();
-    }
-    window.location.reload();
+    returnToHome();
 });
 
 gameLoop();
