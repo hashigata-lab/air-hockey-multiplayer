@@ -96,7 +96,7 @@ if (isNaN(seVolume)) seVolume = 1.0;
 
 const bgmController = {
     audioElements: {
-        WAITING: new Audio('assets/bgm_lobby.mp3'),
+        WAITING: new Audio(`assets/bgm_lobby.mp3?v=${Date.now()}`),
         CHAOS_VOID: new Audio('assets/bgm_cyberpunk.mp3'),
         BLOOD_MOON: new Audio('assets/bgm_retro.mp3'),
         ABYSSAL_ICE: new Audio('assets/bgm_ice.mp3')
