@@ -537,7 +537,27 @@ btnCreateRoom.addEventListener('click', () => {
 
 btnPracticeMode.addEventListener('click', () => {
     if (!socket.connected) socket.connect();
+    
+    homeScreen.style.display = 'none';
+    document.getElementById('lobby-screen').style.display = 'block';
+    gameContainer.style.display = 'none';
+    chatContainer.style.display = 'flex';
+    
+    if (!bgmController.hasStarted) {
+        bgmController.hasStarted = true;
+        bgmController.play('WAITING');
+    }
+
     socket.emit('create_practice_room', currentUser);
+    
+    // Make sure we apply our skin once connected
+    if (socket.connected) {
+        if (localSelectedSkin !== 'DEFAULT') socket.emit('change_skin', localSelectedSkin);
+    } else {
+        socket.once('connect', () => {
+            if (localSelectedSkin !== 'DEFAULT') socket.emit('change_skin', localSelectedSkin);
+        });
+    }
 });
 
 btnJoinRoom.addEventListener('click', () => {
