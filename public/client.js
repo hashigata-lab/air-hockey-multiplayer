@@ -371,11 +371,46 @@ function drawUI() {
     ctx.fillStyle = '#fff';
     ctx.textAlign = 'center';
     
+    function getHearts(lives, colorHeart) {
+        let str = '';
+        const maxLives = 5;
+        for (let i = 0; i < maxLives; i++) {
+            str += i < lives ? colorHeart : '🖤';
+        }
+        return str;
+    }
+
     const p = serverState.players;
-    if (p.top.active) ctx.fillText(`💙 ${p.top.lives} ${p.top.name}`, BOARD_SIZE/2, 40);
-    if (p.bottom.active) ctx.fillText(`❤️ ${p.bottom.lives} ${p.bottom.name}`, BOARD_SIZE/2, BOARD_SIZE - 20);
-    if (p.left.active) ctx.fillText(`💚 ${p.left.lives} ${p.left.name}`, 150, BOARD_SIZE/2);
-    if (p.right.active) ctx.fillText(`💛 ${p.right.lives} ${p.right.name}`, BOARD_SIZE - 150, BOARD_SIZE/2);
+    
+    if (p.top.active) {
+        ctx.save();
+        ctx.translate(BOARD_SIZE/2, 35);
+        ctx.fillText(`${p.top.name} ${getHearts(p.top.lives, '💙')}`, 0, 0);
+        ctx.restore();
+    }
+    
+    if (p.bottom.active) {
+        ctx.save();
+        ctx.translate(BOARD_SIZE/2, BOARD_SIZE - 20);
+        ctx.fillText(`${p.bottom.name} ${getHearts(p.bottom.lives, '❤️')}`, 0, 0);
+        ctx.restore();
+    }
+    
+    if (p.left.active) {
+        ctx.save();
+        ctx.translate(35, BOARD_SIZE/2);
+        ctx.rotate(-Math.PI / 2);
+        ctx.fillText(`${p.left.name} ${getHearts(p.left.lives, '💚')}`, 0, 0);
+        ctx.restore();
+    }
+    
+    if (p.right.active) {
+        ctx.save();
+        ctx.translate(BOARD_SIZE - 35, BOARD_SIZE/2);
+        ctx.rotate(Math.PI / 2);
+        ctx.fillText(`${p.right.name} ${getHearts(p.right.lives, '💛')}`, 0, 0);
+        ctx.restore();
+    }
 
     if (serverState.status === 'WAITING') {
         ctx.fillStyle = 'rgba(0,0,0,0.7)';
