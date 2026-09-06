@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>4-Player Air Hockey</title>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #111; 
+            color: #fff; 
+            font-family: sans-serif; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            height: 100vh; 
+            touch-action: none;
+        }
+        #game-container {
+            display: none; /* ロビー中は隠す */
+            position: relative;
+        }
+        #gameCanvas {
+            background-color: #222; 
+            border: 4px solid #444;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            max-width: 95vmin;
+            max-height: 95vmin;
+            display: block;
+        }
+        #ui { 
+            position: absolute; 
+            top: 10px; 
+            left: 10px; 
+            background: rgba(0,0,0,0.7); 
+            padding: 15px; 
+            border-radius: 8px; 
+            pointer-events: none;
+            z-index: 10;
+        }
+        h3 { margin: 0 0 10px 0; }
+        p { margin: 5px 0; font-size: 14px; }
+        
+        #lobby {
+            background: #222;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.8);
+            text-align: center;
+            z-index: 100;
+        }
+        #lobby input {
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+            padding: 10px;
+            box-sizing: border-box;
+            background: #333;
+            color: #fff;
+            border: 1px solid #555;
+            border-radius: 4px;
+        }
+        #lobby button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            background: #4444ff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        #lobby button:hover {
+            background: #6666ff;
+        }
+
+        #chat-container {
+            display: none;
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 300px;
+            height: 200px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #444;
+            border-radius: 8px;
+            flex-direction: column;
+            z-index: 20;
+        }
+        #chat-messages {
+            flex-grow: 1;
+            overflow-y: auto;
+            padding: 10px;
+            font-size: 14px;
+        }
+        #chat-input-container {
+            display: flex;
+            border-top: 1px solid #444;
+        }
+        #chat-input {
+            flex-grow: 1;
+            background: #222;
+            color: #fff;
+            border: none;
+            padding: 8px;
+            outline: none;
+            border-bottom-left-radius: 8px;
+        }
+        #chat-send {
+            background: #444;
+            color: #fff;
+            border: none;
+            padding: 0 15px;
+            cursor: pointer;
+            border-bottom-right-radius: 8px;
+        }
+        #chat-send:hover { background: #555; }
+    </style>
+</head>
+<body>
+    <div id="lobby">
+        <h2>Air Hockey</h2>
+        <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
+        <input type="text" id="roomIdInput" placeholder="Room ID (Leave empty to create)">
+        <div>
+            <button id="btnCreateRoom">Create Room</button>
+            <button id="btnJoinRoom">Join Room</button>
+        </div>
+    </div>
+
+    <div id="game-container">
+        <div id="ui">
+            <h3>Air Hockey</h3>
+            <p id="status">Connecting...</p>
+            <p id="debug-info">-</p>
+        </div>
+        <canvas id="gameCanvas" width="800" height="800"></canvas>
+    </div>
+
+    <div id="chat-container">
+        <div id="chat-messages"></div>
+        <div id="chat-input-container">
+            <input type="text" id="chat-input" placeholder="Chat message...">
+            <button id="chat-send">Send</button>
+        </div>
+    </div>
+    
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+</body>
+</html>
