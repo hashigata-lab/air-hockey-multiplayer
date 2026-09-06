@@ -11,6 +11,9 @@ const roomIdInput = document.getElementById('roomIdInput');
 const btnCreateRoom = document.getElementById('btnCreateRoom');
 const btnJoinRoom = document.getElementById('btnJoinRoom');
 const btnBackToTitle = document.getElementById('btnBackToTitle');
+const btnGotoSkinSelect = document.getElementById('btn-goto-skin-select');
+const skinSelectScreen = document.getElementById('skin-select-screen');
+const btnSkinSelectBack = document.getElementById('btn-skin-select-back');
 const btnGotoGacha = document.getElementById('btn-goto-gacha');
 const gachaScreen = document.getElementById('gacha-screen');
 const btnGachaBack = document.getElementById('btn-gacha-back');
@@ -479,12 +482,14 @@ function showHomeScreen(playerName) {
     homeScreen.style.display = 'block';
     document.getElementById('home-player-name').innerText = playerName;
     
-    // Hide Gacha for guests
+    // Hide Gacha and Skin Select for guests
     const token = localStorage.getItem('auth_token');
     if (!token || playerName.startsWith('Guest_')) {
         btnGotoGacha.style.display = 'none';
+        btnGotoSkinSelect.style.display = 'none';
     } else {
         btnGotoGacha.style.display = 'block';
+        btnGotoSkinSelect.style.display = 'block';
     }
 
     renderSkinOptions();
@@ -646,6 +651,17 @@ btnGachaBack.addEventListener('click', () => {
     gachaScreen.style.display = 'none';
     homeScreen.style.display = 'block';
     renderSkinOptions();
+});
+
+// Skin Selection Screen Logic
+btnGotoSkinSelect.addEventListener('click', () => {
+    homeScreen.style.display = 'none';
+    skinSelectScreen.style.display = 'block';
+});
+
+btnSkinSelectBack.addEventListener('click', () => {
+    skinSelectScreen.style.display = 'none';
+    homeScreen.style.display = 'block';
 });
 
 let pendingGachaResult = null;

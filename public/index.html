@@ -623,31 +623,29 @@
             <button id="btnCreateRoom" style="flex: 1;" class="animate__animated animate__pulse animate__infinite animate__slower">Create Room</button>
             <button id="btnJoinRoom" style="flex: 1;">Join Room</button>
         </div>
-        <button id="btn-goto-gacha" style="background: linear-gradient(45deg, #ff007f, #7f00ff); border-color: #ff00ff; box-shadow: 0 4px 0 #cc00cc; width: 100%; margin-bottom: 20px; font-weight: bold; font-size: 18px; text-shadow: 0 0 5px #fff;">🎰 Play Gacha 🎰</button>
-        <div class="skin-selection-container" style="margin-top: 20px;">
-            <h3 style="margin-bottom: 10px; font-size: 16px; color: #aaccff; text-transform: uppercase;">Select Your Skin</h3>
-            <div class="skin-options" id="skin-options">
-                <div class="skin-option selected" data-skin="DEFAULT">
-                    <div class="default-skin"></div>
-                    <span>Default</span>
-                </div>
-                <div class="skin-option" data-skin="DOGE">
-                    <img src="assets/skin_doge.jpg" alt="Doge">
-                    <span>Doge</span>
-                </div>
-                <div class="skin-option" data-skin="CAT">
-                    <img src="assets/skin_cat.jpg" alt="Crying Cat">
-                    <span>Crying Cat</span>
-                </div>
-                <div class="skin-option" data-skin="FROG">
-                    <img src="assets/skin_frog.jpg" alt="Smug Frog">
-                    <span>Smug Frog</span>
-                </div>
-            </div>
+        <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+            <button id="btn-goto-skin-select" style="flex: 1; background: linear-gradient(45deg, #007fff, #00ffcc); border-color: #00ffff; box-shadow: 0 4px 0 #009999; font-weight: bold; font-size: 16px; text-shadow: 0 0 5px #fff; color: #000;">👔 Change Skin</button>
+            <button id="btn-goto-gacha" style="flex: 1; background: linear-gradient(45deg, #ff007f, #7f00ff); border-color: #ff00ff; box-shadow: 0 4px 0 #cc00cc; font-weight: bold; font-size: 16px; text-shadow: 0 0 5px #fff;">🎰 Play Gacha</button>
         </div>
 
         <div style="margin-top: 30px;">
             <button id="btnBackToTitle" style="background: #555; border-color: #333; box-shadow: 0 4px 0 #333;">Logout</button>
+        </div>
+    </div>
+
+    <!-- Skin Selection Screen -->
+    <div id="skin-select-screen" style="display: none; text-align: center;">
+        <h1 style="color: #aaccff; text-shadow: 0 0 10px #007fff; font-size: 32px; margin-bottom: 20px;">SKIN SELECTION</h1>
+        
+        <div class="skin-selection-container" style="margin: 0 auto 30px; max-width: 600px; padding: 20px; background: rgba(0, 20, 40, 0.8); border: 2px solid #007fff; border-radius: 10px; box-shadow: inset 0 0 20px rgba(0, 127, 255, 0.2);">
+            <h3 style="margin-bottom: 15px; font-size: 18px; color: #aaccff; text-transform: uppercase;">Select Your Mallet Skin</h3>
+            <div class="skin-options" id="skin-options" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 15px;">
+                <!-- Dynamically populated -->
+            </div>
+        </div>
+
+        <div style="margin-top: 30px;">
+            <button id="btn-skin-select-back" style="background: #555; border-color: #333; box-shadow: 0 4px 0 #333; max-width: 200px;">Back to Home</button>
         </div>
     </div>
 
