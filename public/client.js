@@ -59,6 +59,9 @@ function initAudio() {
 }
 
 let isMuted = false;
+let seVolume = parseFloat(localStorage.getItem('seVolume'));
+if (isNaN(seVolume)) seVolume = 1.0;
+
 const bgmController = {
     audioElements: {
         WAITING: new Audio('assets/bgm_lobby.mp3'),
@@ -68,12 +71,23 @@ const bgmController = {
     },
     currentTheme: null,
     hasStarted: false,
+    volume: 0.4,
     
     init() {
+        let savedVol = parseFloat(localStorage.getItem('bgmVolume'));
+        if (!isNaN(savedVol)) this.volume = savedVol;
         for (let key in this.audioElements) {
             this.audioElements[key].loop = true;
-            this.audioElements[key].volume = 0.4;
+            this.audioElements[key].volume = this.volume;
         }
+    },
+    
+    updateVolume(vol) {
+        this.volume = vol;
+        for (let key in this.audioElements) {
+            this.audioElements[key].volume = this.volume;
+        }
+        localStorage.setItem('bgmVolume', vol);
     },
     
     play(theme) {
@@ -109,15 +123,41 @@ document.getElementById('btn-mute').addEventListener('click', (e) => {
     bgmController.updateMute();
 });
 
+const btnOptions = document.getElementById('btn-options');
+const optionsModal = document.getElementById('options-modal');
+const btnCloseOptions = document.getElementById('btn-close-options');
+const bgmVolumeSlider = document.getElementById('bgm-volume');
+const seVolumeSlider = document.getElementById('se-volume');
+
+bgmVolumeSlider.value = bgmController.volume;
+seVolumeSlider.value = seVolume;
+
+btnOptions.addEventListener('click', () => {
+    optionsModal.style.display = 'flex';
+});
+btnCloseOptions.addEventListener('click', () => {
+    optionsModal.style.display = 'none';
+});
+bgmVolumeSlider.addEventListener('input', (e) => {
+    bgmController.updateVolume(parseFloat(e.target.value));
+});
+seVolumeSlider.addEventListener('input', (e) => {
+    seVolume = parseFloat(e.target.value);
+    localStorage.setItem('seVolume', seVolume);
+});
+
 function playSound(type) {
-    if (isMuted) return;
+    if (isMuted || seVolume === 0) return;
     if (!audioCtx) return;
 
     const osc = audioCtx.createOscillator();
     const gainNode = audioCtx.createGain();
+    const masterGain = audioCtx.createGain();
+    masterGain.gain.value = seVolume;
     
     osc.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    gainNode.connect(masterGain);
+    masterGain.connect(audioCtx.destination);
     
     const now = audioCtx.currentTime;
 

@@ -234,6 +234,83 @@
             border-color: #ff4444;
         }
 
+        #btn-options {
+            position: absolute;
+            top: 15px;
+            right: 75px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #555;
+            color: #fff;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+        }
+        #btn-options:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #fff;
+        }
+
+        #options-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .options-content {
+            background: #222;
+            padding: 30px;
+            border-radius: 8px;
+            border: 2px solid #00ffff;
+            box-shadow: 0 0 15px #00ffff;
+            color: #fff;
+            width: 300px;
+            text-align: center;
+        }
+        .options-content h2 {
+            margin-top: 0;
+            color: #00ffff;
+        }
+        .slider-group {
+            margin: 20px 0;
+            text-align: left;
+        }
+        .slider-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        .slider-group input[type=range] {
+            width: 100%;
+            cursor: pointer;
+        }
+        #btn-close-options {
+            padding: 10px 20px;
+            background: #ff4444;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            margin-top: 10px;
+        }
+        #btn-close-options:hover {
+            background: #ff6666;
+        }
+
         #chat-container {
             display: none;
             position: absolute;
@@ -279,6 +356,22 @@
 </head>
 <body>
     <button id="btn-mute">🎵</button>
+    <button id="btn-options">⚙️</button>
+
+    <div id="options-modal">
+        <div class="options-content">
+            <h2>Options</h2>
+            <div class="slider-group">
+                <label for="bgm-volume">BGM Volume</label>
+                <input type="range" id="bgm-volume" min="0" max="1" step="0.01" value="0.4">
+            </div>
+            <div class="slider-group">
+                <label for="se-volume">SE Volume</label>
+                <input type="range" id="se-volume" min="0" max="1" step="0.01" value="1.0">
+            </div>
+            <button id="btn-close-options">Close</button>
+        </div>
+    </div>
 
     <div id="lobby">
         <h2>Air Hockey</h2>
