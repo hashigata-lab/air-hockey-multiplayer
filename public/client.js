@@ -263,6 +263,7 @@ let serverState = null;
 let myRole = null;
 let currentRoomId = null;
 let localPaddle = { x: 0, y: 0 }; // ローカルで予測描画するためのマレット座標
+let targetPaddle = { x: 0, y: 0, updated: false }; // ネットワーク送信用の最新座標
 
 // URLからroomIdを取得
 const urlParams = new URLSearchParams(window.location.search);
@@ -498,8 +499,10 @@ function handleInput(clientX, clientY) {
     
     localPaddle.x = boundedX;
     localPaddle.y = boundedY;
-
-    socket.emit('player_input', { x: boundedX, y: boundedY });
+    
+    targetPaddle.x = boundedX;
+    targetPaddle.y = boundedY;
+    targetPaddle.updated = true;
 }
 
 canvas.addEventListener('mousemove', (e) => handleInput(e.clientX, e.clientY));
@@ -877,6 +880,11 @@ function gameLoop() {
     if (gameContainer.style.display !== 'block') {
         requestAnimationFrame(gameLoop);
         return;
+    }
+
+    if (targetPaddle.updated && myRole && serverState && serverState.status === 'PLAYING' && !serverState.players[myRole].eliminated) {
+        socket.emit('player_input', { x: targetPaddle.x, y: targetPaddle.y });
+        targetPaddle.updated = false;
     }
 
     if (bgmController.analyserNode && serverState && serverState.status === 'PLAYING') {
