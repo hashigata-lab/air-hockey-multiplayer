@@ -63,7 +63,7 @@ function getActivePlayersCount(roomState) {
     return ROLES.filter(r => roomState.players[r].active).length;
 }
 
-function checkStartGame(roomId) {
+function startGame(roomId) {
     const roomState = rooms[roomId];
     if (!roomState) return;
 
@@ -122,7 +122,6 @@ function handleGoal(roomId, role, puckIndex) {
                 rooms[roomId].status = 'WAITING';
                 rooms[roomId].winner = null;
                 resetPucks(rooms[roomId]);
-                checkStartGame(roomId);
             }
         }, 5000);
     } else {
@@ -247,7 +246,6 @@ io.on('connection', (socket) => {
         if (assignedRole) {
             socket.emit('assigned_role', assignedRole);
             io.to(roomId).emit('system_message', `${roomState.players[assignedRole].name} joined as ${assignedRole}`);
-            checkStartGame(roomId);
         } else {
             socket.emit('spectator');
             io.to(roomId).emit('system_message', `${playerName || 'Spectator'} joined as spectator`);
@@ -258,6 +256,13 @@ io.on('connection', (socket) => {
         const clientInfo = connectedClients[socket.id];
         if (clientInfo) {
             io.to(clientInfo.roomId).emit('chat_message', { name: clientInfo.name || 'Spectator', message: msg });
+        }
+    });
+
+    socket.on('start_game', () => {
+        const clientInfo = connectedClients[socket.id];
+        if (clientInfo && clientInfo.roomId) {
+            startGame(clientInfo.roomId);
         }
     });
 
@@ -324,7 +329,7 @@ io.on('connection', (socket) => {
                         const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
                         roomState.winner = winnerName;
                         io.to(roomId).emit('system_message', `GAME OVER! Winner is ${winnerName}`);
-                        setTimeout(() => { if (rooms[roomId]) { rooms[roomId].status = 'WAITING'; resetPucks(rooms[roomId]); checkStartGame(roomId); } }, 5000);
+                        setTimeout(() => { if (rooms[roomId]) { rooms[roomId].status = 'WAITING'; resetPucks(rooms[roomId]); } }, 5000);
                     }
                 }
 

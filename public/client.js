@@ -28,6 +28,7 @@ const ITEM_RADIUS = 20;
 let audioCtx = null;
 let shakeFrames = 0;
 let puckTrails = [];
+let isGameLoopRunning = false;
 
 function initAudio() {
     if (!audioCtx) {
@@ -135,7 +136,9 @@ function joinGame(roomId) {
     window.history.pushState({ path: newUrl.href }, '', newUrl.href);
 
     lobbyDiv.style.display = 'none';
-    gameContainer.style.display = 'block';
+    document.getElementById('lobby-screen').style.display = 'block';
+    document.getElementById('lobby-room-id').innerText = currentRoomId;
+    gameContainer.style.display = 'none';
     chatContainer.style.display = 'flex';
 
     socket.connect();
@@ -171,6 +174,10 @@ function sendChat() {
 btnChatSend.addEventListener('click', sendChat);
 chatInput.addEventListener('keypress', (e) => {
     if (e.key === 'Enter') sendChat();
+});
+
+document.getElementById('btn-start-game').addEventListener('click', () => {
+    socket.emit('start_game');
 });
 
 socket.on('chat_message', (data) => {
@@ -211,6 +218,36 @@ socket.on('system_message', (msg) => {
 
 socket.on('game_state', (state) => {
     serverState = state;
+    
+    if (state.status === 'WAITING') {
+        const p = state.players;
+        let activeCount = 0;
+        let listHtml = '';
+        ['top', 'bottom', 'left', 'right'].forEach(role => {
+            if (p[role].active) {
+                activeCount++;
+                listHtml += `<li><span style="color: ${p[role].color}">${p[role].name || role}</span> <span>(${role})</span></li>`;
+            }
+        });
+        
+        const lobbyPlayerList = document.getElementById('lobby-player-list');
+        if (lobbyPlayerList) lobbyPlayerList.innerHTML = listHtml;
+        const lobbyPlayerCount = document.getElementById('lobby-player-count');
+        if (lobbyPlayerCount) lobbyPlayerCount.innerText = activeCount;
+        const btnStart = document.getElementById('btn-start-game');
+        if (btnStart) btnStart.disabled = (activeCount < 2);
+    } else if (state.status === 'PLAYING') {
+        const lobbyScreen = document.getElementById('lobby-screen');
+        if (lobbyScreen && lobbyScreen.style.display === 'block') {
+            lobbyScreen.style.display = 'none';
+            document.getElementById('game-container').style.display = 'block';
+        }
+        if (!isGameLoopRunning) {
+            isGameLoopRunning = true;
+            gameLoop();
+        }
+    }
+
     if (state.events && state.events.length > 0) {
         state.events.forEach(ev => {
             playSound(ev);
