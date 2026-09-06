@@ -367,6 +367,7 @@ io.on('connection', (socket) => {
                 roomState.players[role].paddleRadius = PADDLE_RADIUS;
                 roomState.players[role].barrierActive = false;
                 
+                const BOARD_SIZE = roomState.boardSize || 800;
                 if (role === 'bottom') { roomState.players[role].x = BOARD_SIZE/2; roomState.players[role].y = BOARD_SIZE - PADDLE_RADIUS - 20; }
                 if (role === 'top')    { roomState.players[role].x = BOARD_SIZE/2; roomState.players[role].y = PADDLE_RADIUS + 20; }
                 if (role === 'left')   { roomState.players[role].x = PADDLE_RADIUS + 20; roomState.players[role].y = BOARD_SIZE/2; }
