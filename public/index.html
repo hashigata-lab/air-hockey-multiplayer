@@ -550,7 +550,57 @@
 
     <div id="lobby" class="animate__animated animate__zoomIn">
         <h2 style="position: relative; margin-bottom: 20px; text-align: center; border: none; background: transparent; box-shadow: none;">
-            <img src="assets/logo_emblem.png" alt="Logo Emblem" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 380px; opacity: 0.5; z-index: 0; filter: drop-shadow(0 0 15px rgba(100, 150, 255, 0.8)); pointer-events: none;">
+            <svg viewBox="0 0 200 200" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 450px; opacity: 0.6; z-index: 0; pointer-events: none;">
+                <defs>
+                    <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stop-color="#ffffff" />
+                        <stop offset="30%" stop-color="#aaccff" />
+                        <stop offset="70%" stop-color="#6699cc" />
+                        <stop offset="100%" stop-color="#336699" />
+                    </linearGradient>
+                    <filter id="lightningGlow" x="-50%" y="-50%" width="200%" height="200%">
+                        <feGaussianBlur stdDeviation="2" result="blur1" />
+                        <feGaussianBlur stdDeviation="6" result="blur2" />
+                        <feMerge>
+                            <feMergeNode in="blur2" />
+                            <feMergeNode in="blur1" />
+                            <feMergeNode in="SourceGraphic" />
+                        </feMerge>
+                    </filter>
+                    <filter id="malletShadow">
+                        <feDropShadow dx="0" dy="0" stdDeviation="15" flood-color="#8bb5e0" flood-opacity="0.9"/>
+                    </filter>
+                </defs>
+
+                <!-- Lightning -->
+                <g filter="url(#lightningGlow)" stroke="#cce0ff" stroke-width="2" fill="none" style="animation: flash 3s infinite alternate;">
+                    <path d="M 100 100 L 40 60 L 55 50 L 15 10" />
+                    <path d="M 100 100 L 160 60 L 145 50 L 185 10" />
+                    <path d="M 100 120 L 30 150 L 45 160 L 10 190" />
+                    <path d="M 100 120 L 170 150 L 155 160 L 190 190" />
+                    <path d="M 80 140 L 10 120 L 30 110 L 0 90" />
+                    <path d="M 120 140 L 190 120 L 170 110 L 200 90" />
+                </g>
+
+                <!-- Minimalist Mallet -->
+                <g filter="url(#malletShadow)">
+                    <!-- Base -->
+                    <rect x="40" y="140" width="120" height="24" rx="12" fill="url(#silverGrad)" />
+                    <!-- Handle -->
+                    <path d="M 85 140 L 85 60 C 85 30, 115 30, 115 60 L 115 140 Z" fill="url(#silverGrad)" />
+                    <!-- Highlight to make it look metallic/sleek -->
+                    <path d="M 95 140 L 95 60 C 95 40, 105 40, 105 60 L 105 140 Z" fill="#ffffff" opacity="0.5" />
+                    <ellipse cx="100" cy="140" rx="60" ry="12" fill="#cce0ff" opacity="0.3" />
+                </g>
+                <style>
+                    @keyframes flash {
+                        0%, 100% { opacity: 0.3; }
+                        50% { opacity: 1; }
+                        51% { opacity: 0.5; }
+                        52% { opacity: 1; }
+                    }
+                </style>
+            </svg>
             <div style="position: relative; z-index: 1;">
                 <img src="assets/title_text_logo.png" alt="DISC OF CHAOS" style="width: 100%; max-width: 450px; display: block; margin: 0 auto; filter: drop-shadow(0 0 10px rgba(100, 150, 255, 0.6));">
                 <div style="font-size: 16px; letter-spacing: 8px; text-transform: uppercase; color: #aaccff; text-shadow: 0 0 5px #8bb5e0; margin-top: -55px; position: relative; z-index: 2;">Awakening of the Four</div>
