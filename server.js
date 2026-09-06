@@ -2,12 +2,81 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const connectDB = require('./db');
+const User = require('./models/User');
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
+app.use(express.json());
 const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
+app.use(express.json());
+
+// --- API Endpoints ---
+app.post('/api/register', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        if (!username || !password) return res.status(400).json({ error: 'Username and password required' });
+        
+        const existing = await User.findOne({ username });
+        if (existing) return res.status(400).json({ error: 'Username already taken' });
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        const user = new User({ username, password: hashedPassword });
+        await user.save();
+        
+        const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_SECRET || 'secret123');
+        res.json({ token, username: user.username, rating: user.rating });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const user = await User.findOne({ username });
+        if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+        
+        const match = await bcrypt.compare(password, user.password);
+        if (!match) return res.status(400).json({ error: 'Invalid credentials' });
+        
+        const token = jwt.sign({ userId: user._id, username: user.username }, process.env.JWT_SECRET || 'secret123');
+        res.json({ token, username: user.username, rating: user.rating });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.post('/api/me', async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) return res.status(401).json({ error: 'No token' });
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'secret123');
+        const user = await User.findById(decoded.userId);
+        if (!user) return res.status(404).json({ error: 'User not found' });
+        res.json({ username: user.username, rating: user.rating });
+    } catch (err) {
+        res.status(401).json({ error: 'Invalid token' });
+    }
+});
+
+app.get('/api/leaderboard', async (req, res) => {
+    try {
+        const users = await User.find({}, 'username rating').sort({ rating: -1 }).limit(10);
+        res.json(users);
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+// ---------------------
+
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ゲームの論理サイズと定数
@@ -24,6 +93,36 @@ const EFFECT_DURATION = 10000; // 10秒
 // ルーム管理
 const rooms = {};
 const connectedClients = {}; // socket.id -> { roomId, role, name }
+
+
+async function handleGameOver(roomState, winnerRole) {
+    roomState.status = 'GAMEOVER';
+    roomState.events.push('gameover');
+    const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
+    roomState.winner = winnerName;
+    
+    // Update Ratings in MongoDB
+    const pointsChanges = {};
+    for (let role of ROLES) {
+        const player = roomState.players[role];
+        if (player.active || player.eliminated) {
+            if (player.name) {
+                try {
+                    const dbUser = await User.findOne({ username: player.name });
+                    if (dbUser) {
+                        const change = (role === winnerRole) ? 30 : -10;
+                        dbUser.rating += change;
+                        await dbUser.save();
+                        pointsChanges[role] = change;
+                    }
+                } catch (e) {
+                    console.error("DB Error updating rating:", e);
+                }
+            }
+        }
+    }
+    roomState.pointsChanges = pointsChanges;
+}
 
 function createInitialGameState(boardSize = 800) {
     const BOARD_SIZE = boardSize;
@@ -88,7 +187,7 @@ function startGame(roomId) {
     }
 }
 
-function handleGoal(roomId, role, puckIndex) {
+async function handleGoal(roomId, role, puckIndex) {
     const BOARD_SIZE = rooms[roomId]?.boardSize || 800;
     const roomState = rooms[roomId];
     if (!roomState || roomState.status !== 'PLAYING') return;
@@ -114,11 +213,9 @@ function handleGoal(roomId, role, puckIndex) {
     let aliveRoles = ROLES.filter(r => roomState.players[r].active && !roomState.players[r].eliminated);
     
     if (aliveRoles.length <= 1) {
-        roomState.status = 'GAMEOVER';
-        roomState.events.push('gameover');
         const winnerRole = aliveRoles.length === 1 ? aliveRoles[0] : null;
-        const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
-        roomState.winner = winnerName;
+        await handleGameOver(roomState, winnerRole);
+        const winnerName = roomState.winner;
         
         io.to(roomId).emit('system_message', `GAME OVER! Winner is ${winnerName}`);
         
@@ -354,7 +451,7 @@ io.on('connection', (socket) => {
         }
     });
 
-    socket.on('disconnect', () => {
+    socket.on('disconnect', async () => {
         const clientInfo = connectedClients[socket.id];
         if (clientInfo) {
             const { roomId, role } = clientInfo;
@@ -378,10 +475,9 @@ io.on('connection', (socket) => {
                 if (roomState.status === 'PLAYING') {
                     let aliveRoles = ROLES.filter(r => roomState.players[r].active && !roomState.players[r].eliminated);
                     if (aliveRoles.length <= 1) {
-                        roomState.status = 'GAMEOVER';
                         const winnerRole = aliveRoles.length === 1 ? aliveRoles[0] : null;
-                        const winnerName = winnerRole ? (roomState.players[winnerRole].name || winnerRole.toUpperCase()) : 'Draw';
-                        roomState.winner = winnerName;
+                        await handleGameOver(roomState, winnerRole);
+                        const winnerName = roomState.winner;
                         io.to(roomId).emit('system_message', `GAME OVER! Winner is ${winnerName}`);
                     }
                 }

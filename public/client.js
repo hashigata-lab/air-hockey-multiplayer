@@ -162,6 +162,134 @@ document.getElementById('btn-mute').addEventListener('click', (e) => {
     bgmController.updateMute();
 });
 
+
+// --- Account & Rank Logic ---
+let currentUser = null;
+let currentRating = 1000;
+
+async function checkAuth() {
+    const token = localStorage.getItem('auth_token');
+    if (token) {
+        try {
+            const res = await fetch('/api/me', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ token })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                currentUser = data.username;
+                currentRating = data.rating;
+                document.getElementById('playerName').value = currentUser;
+                document.getElementById('playerName').disabled = true;
+                updateAuthStatus();
+            } else {
+                localStorage.removeItem('auth_token');
+            }
+        } catch (e) { console.error(e); }
+    }
+}
+
+function getRankBadge(rating) {
+    if (rating >= 2000) return '💎 Platinum';
+    if (rating >= 1500) return '🥇 Gold';
+    if (rating >= 1200) return '🥈 Silver';
+    return '🥉 Bronze';
+}
+
+function updateAuthStatus() {
+    const statusEl = document.getElementById('auth-status');
+    const authBtn = document.getElementById('btn-show-auth');
+    if (currentUser) {
+        statusEl.innerText = `Logged in as ${currentUser} | Rating: ${currentRating} | Rank: ${getRankBadge(currentRating)}`;
+        authBtn.innerText = 'Logout';
+    } else {
+        statusEl.innerText = '';
+        authBtn.innerText = 'Login / Register';
+        document.getElementById('playerName').disabled = false;
+    }
+}
+
+document.getElementById('btn-show-auth').addEventListener('click', () => {
+    if (currentUser) {
+        localStorage.removeItem('auth_token');
+        currentUser = null;
+        updateAuthStatus();
+    } else {
+        document.getElementById('auth-modal').style.display = 'flex';
+        document.getElementById('auth-error').innerText = '';
+    }
+});
+
+document.getElementById('btn-close-auth').addEventListener('click', () => {
+    document.getElementById('auth-modal').style.display = 'none';
+});
+
+async function handleAuth(isLogin) {
+    const username = document.getElementById('auth-username').value;
+    const password = document.getElementById('auth-password').value;
+    const errorEl = document.getElementById('auth-error');
+    if (!username || !password) {
+        errorEl.innerText = 'Please enter username and password';
+        return;
+    }
+    const endpoint = isLogin ? '/api/login' : '/api/register';
+    try {
+        const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, password })
+        });
+        const data = await res.json();
+        if (res.ok) {
+            localStorage.setItem('auth_token', data.token);
+            currentUser = data.username;
+            currentRating = data.rating;
+            document.getElementById('playerName').value = currentUser;
+            document.getElementById('playerName').disabled = true;
+            document.getElementById('auth-modal').style.display = 'none';
+            updateAuthStatus();
+        } else {
+            errorEl.innerText = data.error;
+        }
+    } catch (e) {
+        errorEl.innerText = 'Network error';
+    }
+}
+
+document.getElementById('btn-login').addEventListener('click', () => handleAuth(true));
+document.getElementById('btn-register').addEventListener('click', () => handleAuth(false));
+
+document.getElementById('btn-show-leaderboard').addEventListener('click', async () => {
+    const listEl = document.getElementById('leaderboard-list');
+    listEl.innerHTML = '<li>Loading...</li>';
+    document.getElementById('leaderboard-modal').style.display = 'flex';
+    try {
+        const res = await fetch('/api/leaderboard');
+        const users = await res.json();
+        listEl.innerHTML = '';
+        users.forEach((u, i) => {
+            const li = document.createElement('li');
+            li.style.padding = '8px';
+            li.style.borderBottom = '1px solid #444';
+            li.style.display = 'flex';
+            li.style.justifyContent = 'space-between';
+            li.innerHTML = `<span><strong>#${i+1}</strong> ${u.username}</span> <span>${u.rating} ${getRankBadge(u.rating)}</span>`;
+            listEl.appendChild(li);
+        });
+    } catch (e) {
+        listEl.innerHTML = '<li>Error loading leaderboard</li>';
+    }
+});
+
+document.getElementById('btn-close-leaderboard').addEventListener('click', () => {
+    document.getElementById('leaderboard-modal').style.display = 'none';
+});
+
+// Run auth check on load
+checkAuth();
+// ----------------------------
+
 const btnOptions = document.getElementById('btn-options');
 const optionsModal = document.getElementById('options-modal');
 const btnCloseOptions = document.getElementById('btn-close-options');

@@ -459,6 +459,30 @@
         </div>
     </div>
 
+        <div id="auth-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center;">
+        <div class="options-content">
+            <h2>Account</h2>
+            <input type="text" id="auth-username" placeholder="Username" style="margin: 10px 0; padding: 10px; width: 100%;">
+            <input type="password" id="auth-password" placeholder="Password" style="margin: 10px 0; padding: 10px; width: 100%;">
+            <div style="display: flex; gap: 10px; justify-content: center;">
+                <button id="btn-login" style="flex: 1;">Login</button>
+                <button id="btn-register" style="flex: 1;">Register</button>
+            </div>
+            <p id="auth-error" style="color: #ff4444; font-size: 14px; margin-top: 10px;"></p>
+            <button id="btn-close-auth" style="margin-top: 20px;">Cancel</button>
+        </div>
+    </div>
+
+    <div id="leaderboard-modal" style="display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.8); z-index: 200; justify-content: center; align-items: center;">
+        <div class="options-content" style="width: 400px; max-width: 90%;">
+            <h2 style="color: #FFD700;">Top Players</h2>
+            <ul id="leaderboard-list" style="list-style: none; padding: 0; margin: 10px 0; text-align: left; max-height: 300px; overflow-y: auto;">
+                <!-- Populated by JS -->
+            </ul>
+            <button id="btn-close-leaderboard" style="margin-top: 20px;">Close</button>
+        </div>
+    </div>
+
     <div id="lobby">
         <h2>Air Hockey</h2>
         <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
@@ -467,6 +491,11 @@
             <button id="btnCreateRoom">Create Room</button>
             <button id="btnJoinRoom">Join Room</button>
         </div>
+        <div style="margin-top: 20px;">
+            <button id="btn-show-auth" style="background: #1E90FF; border-color: #0000CD; box-shadow: 0 4px 0 #0000CD;">Login / Register</button>
+            <button id="btn-show-leaderboard" style="background: #FFD700; color: #000; border-color: #DAA520; box-shadow: 0 4px 0 #DAA520;">Leaderboard</button>
+        </div>
+        <p id="auth-status" style="font-size: 16px; margin-top: 10px; color: #32CD32; font-weight: bold;"></p>
     </div>
 
     <!-- Waiting Room Lobby -->
