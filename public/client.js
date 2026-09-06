@@ -508,6 +508,9 @@ socket.on('disconnect', () => {
     statusText.innerText = 'Disconnected from server.';
     serverState = null;
     myRole = null;
+    if (bgmController.currentTheme && bgmController.audioElements[bgmController.currentTheme]) {
+        bgmController.audioElements[bgmController.currentTheme].pause();
+    }
 });
 
 socket.on('assigned_role', (role) => {
@@ -1180,11 +1183,7 @@ document.getElementById('btn-restart').addEventListener('click', () => {
 
 document.getElementById('btn-return-lobby').addEventListener('click', () => {
     socket.emit('return_lobby');
-    document.getElementById('game-container').style.display = 'none';
-    document.getElementById('lobby-screen').style.display = 'none';
-    document.getElementById('lobby').style.display = 'block';
-    document.getElementById('gameover-overlay').style.display = 'none';
-    isGameLoopRunning = false;
+    window.location.reload();
 });
 
 gameLoop();
