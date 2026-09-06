@@ -8,13 +8,14 @@
         body {
             margin: 0; 
             overflow: hidden; 
-            background-color: #87CEEB; 
-            background-image: url('lobby_bg_yoshi.jpg');
-            background-size: auto 100vh;
-            background-repeat: repeat-x;
-            animation: scrollBg 40s linear infinite;
-            color: #444; 
-            font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; 
+            background-color: #000; 
+            background-image: url('assets/bg_magic_circle.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: spinCircle 120s linear infinite;
+            color: #ddd; 
+            font-family: 'Cinzel', 'Noto Serif JP', 'Georgia', serif; 
             display: flex; 
             justify-content: center; 
             align-items: center; 
@@ -103,15 +104,19 @@
 
 /* Lobby Screen UI */
 #lobby, #lobby-screen {
-    background: rgba(255, 255, 255, 0.85);
-    backdrop-filter: blur(10px);
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: rgba(10, 0, 10, 0.85);
+    backdrop-filter: blur(5px);
     padding: 30px;
-    border-radius: 24px;
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2), inset 0 0 0 4px rgba(255,255,255,1);
+    border-radius: 12px;
+    box-shadow: 0 0 40px rgba(200, 0, 50, 0.4), inset 0 0 10px rgba(100,0,100,0.5);
     text-align: center;
     z-index: 100;
-    border: 4px solid #FFB6C1;
-    color: #444;
+    width: 320px;
+    border: 2px solid #8b0000;
+    color: #e0e0e0;
 }
 #lobby-screen {
     max-width: 600px;
@@ -120,9 +125,10 @@
     overflow-y: auto;
 }
 #lobby h1, #lobby-screen h1, #lobby h2, #lobby-screen h2, #lobby h3, #lobby-screen h3 {
-    color: #FF69B4;
-    text-shadow: 2px 2px 0px #fff, 3px 3px 0px rgba(0,0,0,0.1);
+    color: #ff003c;
+    text-shadow: 0 0 5px #ff003c, 0 0 10px #8b0000;
     margin-top: 0;
+    font-family: 'Cinzel', 'Noto Serif JP', serif;
 }
 #lobby h2 {
     font-size: 32px;
@@ -133,41 +139,43 @@
     margin: 10px 0;
     padding: 12px;
     box-sizing: border-box;
-    background: rgba(255, 255, 255, 0.9);
-    color: #333;
-    border: 3px solid #87CEFA;
-    border-radius: 12px;
+    background: rgba(20, 0, 10, 0.9);
+    color: #fff;
+    border: 2px solid #500;
+    border-radius: 4px;
     font-size: 16px;
     font-family: inherit;
     font-weight: bold;
+    text-align: center;
 }
 #lobby input:focus {
     outline: none;
-    border-color: #FF69B4;
-    box-shadow: 0 0 10px rgba(255,105,180,0.5);
+    border-color: #ff003c;
+    box-shadow: 0 0 15px rgba(255,0,60,0.6);
 }
 #lobby button, #lobby-screen button {
     padding: 12px 24px;
     margin: 10px 5px;
-    background: #32CD32;
+    background: #4a0000;
     color: #fff;
-    border: 3px solid #228B22;
-    border-radius: 16px;
+    border: 1px solid #ff003c;
+    border-radius: 4px;
     cursor: pointer;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     font-family: inherit;
-    box-shadow: 0 4px 0 #228B22;
-    transition: all 0.1s;
+    box-shadow: 0 0 10px rgba(255,0,60,0.3);
+    transition: all 0.2s ease-in-out;
+    text-transform: uppercase;
 }
 #lobby button:hover, #lobby-screen button:hover {
-    transform: translateY(2px);
-    box-shadow: 0 2px 0 #228B22;
-    background: #3cb371;
+    background: #8b0000;
+    box-shadow: 0 0 20px rgba(255,0,60,0.8);
+    transform: scale(1.05);
 }
 #lobby button:active, #lobby-screen button:active {
-    transform: translateY(4px);
-    box-shadow: 0 0 0 #228B22;
+    transform: scale(0.95);
+    box-shadow: 0 0 5px rgba(255,0,60,0.5);
 }
 #btn-start-game:disabled {
     background: #ccc !important;
@@ -452,9 +460,8 @@
 </head>
 <body>
     <!-- Mascot Character -->
-    <div id="mascot-container" style="position: absolute; bottom: 30px; left: -200px; z-index: 10; animation: walkAcross 15s linear infinite;">
-        <!-- mix-blend-mode: multiply makes the white background transparent against bright backgrounds -->
-        <img src="assets/mascot.jpg" alt="Original Mascot" style="width: 180px; mix-blend-mode: multiply; border-radius: 50%; animation: hop 0.5s infinite alternate ease-out;">
+    <div id="mascot-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 10; animation: darkFloat 4s ease-in-out infinite;">
+        <img src="assets/mascot_dark.jpg" alt="Dark Mascot" style="width: 150px; filter: drop-shadow(0 0 20px #8b0000); mix-blend-mode: screen; border-radius: 20px;">
     </div>
     <button id="btn-mute">🎵</button>
     <button id="btn-options">⚙️</button>
