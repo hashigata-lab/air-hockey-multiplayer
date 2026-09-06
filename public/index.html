@@ -125,7 +125,7 @@
     box-shadow: 0 0 40px rgba(200, 0, 50, 0.4), inset 0 0 10px rgba(100,0,100,0.5);
     text-align: center;
     z-index: 100;
-    width: 320px;
+    width: min(420px, 90vw);
     border: 2px solid #8b0000;
     color: #e0e0e0;
 }
@@ -142,7 +142,8 @@
     font-family: 'Cinzel', 'Noto Serif JP', serif;
 }
 #lobby h2 {
-    font-size: 32px;
+    font-size: clamp(24px, 6vw, 32px);
+    white-space: nowrap;
 }
 #lobby input {
     display: block;
