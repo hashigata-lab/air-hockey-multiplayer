@@ -58,7 +58,59 @@ function initAudio() {
     }
 }
 
+let isMuted = false;
+const bgmController = {
+    audioElements: {
+        WAITING: new Audio('assets/bgm_lobby.mp3'),
+        CYBERPUNK: new Audio('assets/bgm_cyberpunk.mp3'),
+        RETRO: new Audio('assets/bgm_retro.mp3'),
+        ICE: new Audio('assets/bgm_ice.mp3')
+    },
+    currentTheme: null,
+    hasStarted: false,
+    
+    init() {
+        for (let key in this.audioElements) {
+            this.audioElements[key].loop = true;
+            this.audioElements[key].volume = 0.4;
+        }
+    },
+    
+    play(theme) {
+        if (!this.hasStarted) return;
+        if (this.currentTheme === theme) return;
+        
+        if (this.currentTheme && this.audioElements[this.currentTheme]) {
+            this.audioElements[this.currentTheme].pause();
+            this.audioElements[this.currentTheme].currentTime = 0;
+        }
+        
+        this.currentTheme = theme;
+        if (!isMuted && this.audioElements[theme]) {
+            this.audioElements[theme].play().catch(e => console.log('Autoplay prevented', e));
+        }
+    },
+    
+    updateMute() {
+        for (let key in this.audioElements) {
+            this.audioElements[key].muted = isMuted;
+        }
+        if (!isMuted && this.currentTheme && this.audioElements[this.currentTheme].paused) {
+            this.audioElements[this.currentTheme].play().catch(e => console.log('Autoplay prevented', e));
+        }
+    }
+};
+bgmController.init();
+
+document.getElementById('btn-mute').addEventListener('click', (e) => {
+    isMuted = !isMuted;
+    e.target.innerText = isMuted ? '🔇' : '🎵';
+    e.target.classList.toggle('muted', isMuted);
+    bgmController.updateMute();
+});
+
 function playSound(type) {
+    if (isMuted) return;
     if (!audioCtx) return;
 
     const osc = audioCtx.createOscillator();
@@ -146,6 +198,10 @@ function generateRandomRoomId() {
 
 function joinGame(roomId) {
     initAudio();
+    if (!bgmController.hasStarted) {
+        bgmController.hasStarted = true;
+        bgmController.play('WAITING');
+    }
     currentRoomId = roomId;
     const playerName = playerNameInput.value.trim() || 'Guest';
     
@@ -253,6 +309,7 @@ socket.on('game_state', (state) => {
     serverState = state;
     
     if (state.status === 'WAITING') {
+        bgmController.play('WAITING');
         const p = state.players;
         let activeCount = 0;
         let listHtml = '';
@@ -291,6 +348,7 @@ socket.on('game_state', (state) => {
             });
         }
     } else if (state.status === 'PLAYING') {
+        bgmController.play(state.stage || 'CYBERPUNK');
         const lobbyScreen = document.getElementById('lobby-screen');
         if (lobbyScreen && lobbyScreen.style.display === 'block') {
             lobbyScreen.style.display = 'none';

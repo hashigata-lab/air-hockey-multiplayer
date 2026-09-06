@@ -207,6 +207,33 @@
             background: #6666ff;
         }
 
+        #btn-mute {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0,0,0,0.7);
+            border: 2px solid #555;
+            color: #fff;
+            font-size: 24px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            z-index: 200;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: 0.2s;
+        }
+        #btn-mute:hover {
+            background: rgba(255,255,255,0.2);
+            border-color: #fff;
+        }
+        #btn-mute.muted {
+            color: #ff4444;
+            border-color: #ff4444;
+        }
+
         #chat-container {
             display: none;
             position: absolute;
@@ -251,6 +278,8 @@
     </style>
 </head>
 <body>
+    <button id="btn-mute">🎵</button>
+
     <div id="lobby">
         <h2>Air Hockey</h2>
         <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
