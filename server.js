@@ -480,7 +480,7 @@ setInterval(() => {
                     }
 
                     // バリア判定
-                    if (player.barrierActive) {
+                    if (p.barrierActive) {
                         let bX1, bY1, bX2, bY2;
                         if (role === 'bottom') { bX1 = goalStart; bX2 = goalEnd; bY1 = BOARD_SIZE - 120; bY2 = BOARD_SIZE - 120; }
                         if (role === 'top') { bX1 = goalStart; bX2 = goalEnd; bY1 = 120; bY2 = 120; }
