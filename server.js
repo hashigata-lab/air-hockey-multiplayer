@@ -521,6 +521,7 @@ setInterval(() => {
         
         if (roomState.status !== 'PLAYING') {
             io.to(roomId).emit('game_state', roomState);
+            roomState.events = [];
             continue;
         }
 
