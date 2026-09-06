@@ -4,16 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ディスクオブカオス ～四天王覚醒～</title>
+    <!-- Animate.css -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+    <!-- tsParticles -->
+    <script src="https://cdn.jsdelivr.net/npm/tsparticles-preset-fire@2/tsparticles.preset.fire.bundle.min.js"></script>
     <style>
         body {
             margin: 0; 
             overflow: hidden; 
             background-color: #000; 
-            background-image: url('assets/bg_magic_circle.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-            animation: spinCircle 120s linear infinite;
             color: #ddd; 
             font-family: 'Cinzel', 'Noto Serif JP', 'Georgia', serif; 
             display: flex; 
@@ -21,6 +20,18 @@
             align-items: center; 
             height: 100vh; 
             touch-action: none;
+        }
+        body::before {
+            content: "";
+            position: absolute;
+            top: -20%; left: -20%;
+            width: 140%; height: 140%;
+            background-image: url('assets/bg_magic_circle.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+            animation: spinCircle 120s linear infinite;
+            z-index: -2;
         }
         #game-container {
             display: none; /* ロビー中は隠す */
@@ -459,6 +470,17 @@
 </style>
 </head>
 <body>
+    <div id="tsparticles" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: -1;"></div>
+    <script>
+        window.onload = async function() {
+            await tsParticles.load("tsparticles", {
+                preset: "fire",
+                background: {
+                    color: "transparent"
+                }
+            });
+        };
+    </script>
     <!-- Mascot Character -->
     <div id="mascot-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 10; animation: darkFloat 4s ease-in-out infinite;">
         <img src="assets/mascot_dark.jpg" alt="Dark Mascot" style="width: 150px; filter: drop-shadow(0 0 20px #8b0000); mix-blend-mode: screen; border-radius: 20px;">
@@ -506,12 +528,12 @@
         </div>
     </div>
 
-    <div id="lobby">
+    <div id="lobby" class="animate__animated animate__zoomIn">
         <h2>🔥 ディスクオブカオス 🔥<br><span style="font-size: 0.5em; letter-spacing: 3px;">～四天王覚醒～</span></h2>
         <input type="text" id="playerName" placeholder="Your Name" maxlength="15">
         <input type="text" id="roomIdInput" placeholder="Room ID (Leave empty to create)">
         <div>
-            <button id="btnCreateRoom">Create Room</button>
+            <button id="btnCreateRoom" class="animate__animated animate__pulse animate__infinite animate__slower">Create Room</button>
             <button id="btnJoinRoom">Join Room</button>
         </div>
         <div style="margin-top: 20px;">
@@ -590,7 +612,7 @@
             </div>
         </div>
 
-        <button id="btn-start-game" disabled style="padding: 15px 30px; font-size: 18px; font-weight: bold; background: #00ff00; color: #000; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">Start Game</button>
+        <button id="btn-start-game" class="animate__animated animate__flash animate__infinite animate__slower" disabled style="padding: 15px 30px; font-size: 18px; font-weight: bold; background: #00ff00; color: #000; border: none; border-radius: 8px; cursor: pointer; margin-top: 10px;">Start Game</button>
     </div>
 
     <div id="game-container">
