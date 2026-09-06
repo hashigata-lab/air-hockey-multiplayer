@@ -422,6 +422,18 @@ setInterval(() => {
         const goalStart = (BOARD_SIZE - GOAL_SIZE) / 2;
         const goalEnd = goalStart + GOAL_SIZE;
 
+        // マレットの速度計算
+        let mallet_v = {};
+        for (let role of ROLES) {
+            let p = roomState.players[role];
+            if (p.active && !p.eliminated) {
+                if (p.prevTickX === undefined) { p.prevTickX = p.x; p.prevTickY = p.y; }
+                mallet_v[role] = { vx: p.x - p.prevTickX, vy: p.y - p.prevTickY };
+                p.prevTickX = p.x;
+                p.prevTickY = p.y;
+            }
+        }
+
         for (let i = roomState.pucks.length - 1; i >= 0; i--) {
             let puck = roomState.pucks[i];
             let scored = false;
@@ -495,25 +507,49 @@ setInterval(() => {
 
                     if (distance < minDist) {
                         let overlap = minDist - distance;
-                        puck.x += (dx / distance) * overlap;
-                        puck.y += (dy / distance) * overlap;
+                        let nx = dx / distance;
+                        let ny = dy / distance;
+                        puck.x += nx * overlap;
+                        puck.y += ny * overlap;
 
-                        let angle = Math.atan2(puck.y - p.y, puck.x - p.x);
-                        let hitPower = 12;
-                        if (p.sp >= 100 && p.lastSpeed > 5) {
+                        let mvx = mallet_v[role] ? mallet_v[role].vx : 0;
+                        let mvy = mallet_v[role] ? mallet_v[role].vy : 0;
+                        let mSpeed = Math.sqrt(mvx * mvx + mvy * mvy);
+
+                        if (p.sp >= 100 && mSpeed > 3) {
                             p.sp = 0;
-                            hitPower = 28;
                             puck.isHyper = true;
                             roomState.events.push('hyper_smash');
+                            puck.vx = nx * 35;
+                            puck.vy = ny * 35;
                         } else {
                             p.sp = Math.min(100, p.sp + 10);
                             puck.isHyper = false;
-                        }
 
-                        puck.vx = Math.cos(angle) * hitPower;
-                        puck.vy = Math.sin(angle) * hitPower;
+                            let rvx = puck.vx - mvx;
+                            let rvy = puck.vy - mvy;
+                            let velAlongNormal = rvx * nx + rvy * ny;
+
+                            if (velAlongNormal < 0) {
+                                let e = 1.0;
+                                let j = -(1 + e) * velAlongNormal;
+                                // 最低限の跳ね返りを保証して完全停止を防ぐ
+                                if (j < 6 && mSpeed > 1) j = 6;
+                                puck.vx += j * nx;
+                                puck.vy += j * ny;
+                            }
+                        }
+                        
                         puck.lastHitter = role;
                         roomState.events.push('hit');
+                        
+                        // 衝突後の速度制限（壁抜け防止）
+                        let postSpeed = Math.sqrt(puck.vx * puck.vx + puck.vy * puck.vy);
+                        let postLimit = puck.isHyper ? 35 : 20;
+                        if (postSpeed > postLimit) {
+                            puck.vx = (puck.vx / postSpeed) * postLimit;
+                            puck.vy = (puck.vy / postSpeed) * postLimit;
+                        }
                     }
 
                     // バリア判定
