@@ -78,9 +78,9 @@ if (isNaN(seVolume)) seVolume = 1.0;
 const bgmController = {
     audioElements: {
         WAITING: new Audio('assets/bgm_lobby.mp3'),
-        CYBERPUNK: new Audio('assets/bgm_cyberpunk.mp3'),
-        RETRO: new Audio('assets/bgm_retro.mp3'),
-        ICE: new Audio('assets/bgm_ice.mp3')
+        CHAOS_VOID: new Audio('assets/bgm_cyberpunk.mp3'),
+        BLOOD_MOON: new Audio('assets/bgm_retro.mp3'),
+        ABYSSAL_ICE: new Audio('assets/bgm_ice.mp3')
     },
     currentTheme: null,
     hasStarted: false,
@@ -594,7 +594,7 @@ socket.on('game_state', (state) => {
         }
         document.getElementById('gameover-overlay').style.display = 'none';
     } else if (state.status === 'PLAYING') {
-        bgmController.play(state.stage || 'CYBERPUNK');
+        bgmController.play(state.stage || 'CHAOS_VOID');
         document.getElementById('gameover-overlay').style.display = 'none';
         const lobbyScreen = document.getElementById('lobby-screen');
         if (lobbyScreen && lobbyScreen.style.display === 'block') {
