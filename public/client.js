@@ -165,6 +165,7 @@ document.getElementById('btn-mute').addEventListener('click', (e) => {
 const btnOptions = document.getElementById('btn-options');
 const optionsModal = document.getElementById('options-modal');
 const btnCloseOptions = document.getElementById('btn-close-options');
+const btnExitRoom = document.getElementById('btn-exit-room');
 const bgmVolumeSlider = document.getElementById('bgm-volume');
 const seVolumeSlider = document.getElementById('se-volume');
 
@@ -176,6 +177,11 @@ btnOptions.addEventListener('click', () => {
 });
 btnCloseOptions.addEventListener('click', () => {
     optionsModal.style.display = 'none';
+});
+btnExitRoom.addEventListener('click', () => {
+    optionsModal.style.display = 'none';
+    socket.emit('return_lobby');
+    window.location.reload();
 });
 bgmVolumeSlider.addEventListener('input', (e) => {
     bgmController.updateVolume(parseFloat(e.target.value));
