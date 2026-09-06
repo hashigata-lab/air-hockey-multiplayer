@@ -346,22 +346,30 @@ function drawBarrier(role) {
 function drawItem(x, y, type) {
     let color = '#fff';
     let icon = '?';
-    if (type === 'SIZE_UP') { color = '#44ff44'; icon = '+'; }
-    if (type === 'SIZE_DOWN') { color = '#ff44ff'; icon = '-'; }
-    if (type === 'BARRIER') { color = '#44ccff'; icon = 'B'; }
-    if (type === 'SPEED_UP') { color = '#ff4444'; icon = '>>'; }
-    if (type === 'MULTI_PUCK') { color = '#ffff44'; icon = 'x2'; }
+    if (type === 'SIZE_UP') { color = '#44ff44'; icon = '🍄'; }
+    if (type === 'SIZE_DOWN') { color = '#ff44ff'; icon = '☠️'; }
+    if (type === 'BARRIER') { color = '#44ccff'; icon = '🛡️'; }
+    if (type === 'SPEED_UP') { color = '#ff4444'; icon = '⚡'; }
+    if (type === 'MULTI_PUCK') { color = '#ffff44'; icon = '☄️'; }
 
+    const scale = 1 + Math.sin(Date.now() / 200) * 0.15;
+    const currentRadius = ITEM_RADIUS * scale;
+
+    ctx.save();
+    ctx.shadowBlur = 15;
+    ctx.shadowColor = color;
     ctx.fillStyle = color;
     ctx.beginPath();
-    ctx.arc(x, y, ITEM_RADIUS, 0, Math.PI * 2);
+    ctx.arc(x, y, currentRadius, 0, Math.PI * 2);
     ctx.fill();
 
+    ctx.shadowBlur = 0;
     ctx.fillStyle = '#000';
-    ctx.font = 'bold 16px sans-serif';
+    ctx.font = '20px sans-serif';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText(icon, x, y);
+    ctx.fillText(icon, x, y + 2);
+    ctx.restore();
 }
 
 function drawUI() {
@@ -380,12 +388,42 @@ function drawUI() {
         return str;
     }
 
+    function getEffectIcon(type) {
+        if (type === 'SIZE_UP') return '🍄';
+        if (type === 'SIZE_DOWN') return '☠️';
+        if (type === 'BARRIER') return '🛡️';
+        return '';
+    }
+
+    function drawEffectRing(effect) {
+        if (!effect) return;
+        const icon = getEffectIcon(effect.type);
+        if (!icon) return;
+
+        const offsetX = 130;
+        ctx.font = '20px sans-serif';
+        ctx.fillText(icon, offsetX, 2);
+
+        ctx.beginPath();
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
+        ctx.lineWidth = 4;
+        ctx.arc(offsetX, 0, 16, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.strokeStyle = '#00ffff';
+        ctx.lineWidth = 4;
+        ctx.arc(offsetX, 0, 16, -Math.PI / 2, -Math.PI / 2 + (Math.PI * 2 * effect.ratio));
+        ctx.stroke();
+    }
+
     const p = serverState.players;
     
     if (p.top.active) {
         ctx.save();
         ctx.translate(BOARD_SIZE/2, 35);
         ctx.fillText(`${p.top.name} ${getHearts(p.top.lives, '💙')}`, 0, 0);
+        drawEffectRing(p.top.activeEffect);
         ctx.restore();
     }
     
@@ -393,6 +431,7 @@ function drawUI() {
         ctx.save();
         ctx.translate(BOARD_SIZE/2, BOARD_SIZE - 20);
         ctx.fillText(`${p.bottom.name} ${getHearts(p.bottom.lives, '❤️')}`, 0, 0);
+        drawEffectRing(p.bottom.activeEffect);
         ctx.restore();
     }
     
@@ -401,6 +440,7 @@ function drawUI() {
         ctx.translate(35, BOARD_SIZE/2);
         ctx.rotate(-Math.PI / 2);
         ctx.fillText(`${p.left.name} ${getHearts(p.left.lives, '💚')}`, 0, 0);
+        drawEffectRing(p.left.activeEffect);
         ctx.restore();
     }
     
@@ -409,6 +449,7 @@ function drawUI() {
         ctx.translate(BOARD_SIZE - 35, BOARD_SIZE/2);
         ctx.rotate(Math.PI / 2);
         ctx.fillText(`${p.right.name} ${getHearts(p.right.lives, '💛')}`, 0, 0);
+        drawEffectRing(p.right.activeEffect);
         ctx.restore();
     }
 

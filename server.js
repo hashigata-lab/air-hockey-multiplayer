@@ -34,10 +34,10 @@ function createInitialGameState() {
         items: [],
         itemSpawnTimer: 0,
         players: {
-            bottom: { x: BOARD_SIZE / 2, y: BOARD_SIZE - PADDLE_RADIUS - 20, active: false, id: null, name: '', color: '#ff4444', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false },
-            top:    { x: BOARD_SIZE / 2, y: PADDLE_RADIUS + 20, active: false, id: null, name: '', color: '#4444ff', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false },
-            left:   { x: PADDLE_RADIUS + 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#44ff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false },
-            right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false }
+            bottom: { x: BOARD_SIZE / 2, y: BOARD_SIZE - PADDLE_RADIUS - 20, active: false, id: null, name: '', color: '#ff4444', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null },
+            top:    { x: BOARD_SIZE / 2, y: PADDLE_RADIUS + 20, active: false, id: null, name: '', color: '#4444ff', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null },
+            left:   { x: PADDLE_RADIUS + 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#44ff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null },
+            right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null }
         },
         status: 'WAITING',
         winner: null
@@ -54,6 +54,7 @@ function resetPucks(roomState) {
     for (let role of ROLES) {
         roomState.players[role].paddleRadius = PADDLE_RADIUS;
         roomState.players[role].barrierActive = false;
+        roomState.players[role].activeEffect = null;
     }
 }
 
@@ -150,9 +151,11 @@ function applyItemEffect(roomId, type, puck) {
         case 'SIZE_UP':
             if (targetPlayer) {
                 targetPlayer.paddleRadius = PADDLE_RADIUS * 1.5;
+                targetPlayer.activeEffect = { type: 'SIZE_UP', endTime: Date.now() + EFFECT_DURATION, ratio: 1.0 };
                 setTimeout(() => {
                     if (rooms[roomId] && rooms[roomId].players[targetRole]) {
                         rooms[roomId].players[targetRole].paddleRadius = PADDLE_RADIUS;
+                        if (rooms[roomId].players[targetRole].activeEffect?.type === 'SIZE_UP') rooms[roomId].players[targetRole].activeEffect = null;
                     }
                 }, EFFECT_DURATION);
             }
@@ -160,9 +163,11 @@ function applyItemEffect(roomId, type, puck) {
         case 'SIZE_DOWN':
             if (targetPlayer) {
                 targetPlayer.paddleRadius = PADDLE_RADIUS * 0.5;
+                targetPlayer.activeEffect = { type: 'SIZE_DOWN', endTime: Date.now() + EFFECT_DURATION, ratio: 1.0 };
                 setTimeout(() => {
                     if (rooms[roomId] && rooms[roomId].players[targetRole]) {
                         rooms[roomId].players[targetRole].paddleRadius = PADDLE_RADIUS;
+                        if (rooms[roomId].players[targetRole].activeEffect?.type === 'SIZE_DOWN') rooms[roomId].players[targetRole].activeEffect = null;
                     }
                 }, EFFECT_DURATION);
             }
@@ -170,9 +175,11 @@ function applyItemEffect(roomId, type, puck) {
         case 'BARRIER':
             if (targetPlayer) {
                 targetPlayer.barrierActive = true;
+                targetPlayer.activeEffect = { type: 'BARRIER', endTime: Date.now() + EFFECT_DURATION, ratio: 1.0 };
                 setTimeout(() => {
                     if (rooms[roomId] && rooms[roomId].players[targetRole]) {
                         rooms[roomId].players[targetRole].barrierActive = false;
+                        if (rooms[roomId].players[targetRole].activeEffect?.type === 'BARRIER') rooms[roomId].players[targetRole].activeEffect = null;
                     }
                 }, EFFECT_DURATION);
             }
@@ -487,6 +494,20 @@ setInterval(() => {
                     applyItemEffect(roomId, item.type, puck);
                     roomState.events.push('item_get');
                     roomState.items.splice(j, 1);
+                }
+            }
+        }
+
+        // ステータス効果の残り時間更新
+        const now = Date.now();
+        for (let role of ROLES) {
+            let p = roomState.players[role];
+            if (p.activeEffect) {
+                let left = p.activeEffect.endTime - now;
+                if (left <= 0) {
+                    p.activeEffect = null;
+                } else {
+                    p.activeEffect.ratio = left / EFFECT_DURATION;
                 }
             }
         }
