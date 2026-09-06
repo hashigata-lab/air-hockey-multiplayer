@@ -321,6 +321,7 @@ io.on('connection', (socket) => {
     socket.on('player_input', (data) => {
         const roomState = rooms[socket.roomId];
         if (roomState && roomState.status === 'PLAYING' && socket.role) {
+            const BOARD_SIZE = roomState.boardSize || 800;
             let p = roomState.players[socket.role];
             if (p && !p.eliminated) {
                 let dx = data.x - p.lastX;
