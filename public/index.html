@@ -5,13 +5,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>4-Player Air Hockey</title>
     <style>
-        body { 
+        body {
             margin: 0; 
             overflow: hidden; 
             background-color: #87CEEB; 
             background-image: url('lobby_bg_yoshi.jpg');
-            background-size: cover;
-            background-position: center;
+            background-size: auto 100vh;
+            background-repeat: repeat-x;
+            animation: scrollBg 40s linear infinite;
             color: #444; 
             font-family: 'Comic Sans MS', 'Chalkboard SE', 'Marker Felt', sans-serif; 
             display: flex; 
@@ -437,9 +438,24 @@
             box-shadow: 0 0 10px #ff0055;
         }
         #btn-return-lobby:hover { background: rgba(255,0,85,0.2); }
-    </style>
+    
+        @keyframes scrollBg {
+            from { background-position: 0 0; }
+            to { background-position: -2000px 0; }
+        }
+        @keyframes floatMascot {
+            0% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-15px) rotate(2deg); }
+            100% { transform: translateY(0px) rotate(0deg); }
+        }
+</style>
 </head>
 <body>
+    <!-- Mascot Character -->
+    <div id="mascot-container" style="position: absolute; bottom: 30px; left: 30px; z-index: 10; animation: floatMascot 4s ease-in-out infinite;">
+        <!-- mix-blend-mode: multiply makes the white background transparent against bright backgrounds -->
+        <img src="assets/mascot.jpg" alt="Original Mascot" style="width: 180px; mix-blend-mode: multiply; border-radius: 10px;">
+    </div>
     <button id="btn-mute">🎵</button>
     <button id="btn-options">⚙️</button>
 
