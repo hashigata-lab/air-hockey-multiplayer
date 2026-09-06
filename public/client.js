@@ -14,7 +14,8 @@ const btnBackToTitle = document.getElementById('btnBackToTitle');
 const btnGotoGacha = document.getElementById('btn-goto-gacha');
 const gachaScreen = document.getElementById('gacha-screen');
 const btnGachaBack = document.getElementById('btn-gacha-back');
-const btnGachaSpin = document.getElementById('btn-gacha-spin');
+const btnGachaBet = document.getElementById('btn-gacha-bet');
+const btnGachaLever = document.getElementById('btn-gacha-lever');
 const gogoLamp = document.getElementById('gogo-lamp');
 const gachaResultSkin = document.getElementById('gacha-result-skin');
 const gachaSkinIcon = document.getElementById('gacha-skin-icon');
@@ -647,27 +648,85 @@ btnGachaBack.addEventListener('click', () => {
     renderSkinOptions();
 });
 
+let pendingGachaResult = null;
+
 function resetGachaUI() {
     gogoLamp.style.opacity = '0.3';
     gogoLamp.style.textShadow = '0 0 2px #550000';
     gogoLamp.style.color = '#330000';
     gachaResultSkin.style.display = 'none';
-    gachaStatus.innerText = 'Ready to spin...';
-    btnGachaSpin.disabled = false;
-    btnGachaSpin.style.transform = 'scale(1)';
+    gachaStatus.innerText = 'Ready to BET...';
+    btnGachaBet.disabled = false;
+    btnGachaBet.style.transform = 'scale(1)';
+    btnGachaBet.style.opacity = '1';
+    btnGachaLever.disabled = true;
+    btnGachaLever.style.cursor = 'not-allowed';
+    btnGachaLever.style.opacity = '0.5';
+    pendingGachaResult = null;
 }
 
-btnGachaSpin.addEventListener('click', async () => {
+btnGachaBet.addEventListener('click', async () => {
     const token = localStorage.getItem('auth_token');
     if (!token) return;
     
-    btnGachaSpin.disabled = true;
-    btnGachaSpin.style.transform = 'scale(0.95)';
-    gachaStatus.innerText = 'Spinning...';
+    btnGachaBet.disabled = true;
+    btnGachaBet.style.transform = 'scale(0.95)';
+    btnGachaBet.style.opacity = '0.5';
+    gachaStatus.innerText = 'BET accepted. Hit the LEVER!';
     gachaResultSkin.style.display = 'none';
     gogoLamp.style.opacity = '0.3';
     gogoLamp.style.textShadow = '0 0 2px #550000';
     gogoLamp.style.color = '#330000';
+
+    try {
+        const res = await fetch('/api/gacha', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ token })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+            ownedSkins = data.ownedSkins;
+            pendingGachaResult = data;
+            
+            // 先ガコ (Saki-Gako) Check!
+            const isHighRarity = (data.rarity === 'SSR' || data.rarity === 'UR' || data.rarity === 'SECRET');
+            if (isHighRarity) {
+                // PEKARU! (GOGO Lamp lights up IMMEDIATELY at BET)
+                gogoLamp.style.opacity = '1';
+                gogoLamp.style.color = '#ff99ff';
+                gogoLamp.style.textShadow = '0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 60px #ff00ff, 0 0 80px #fff';
+                // Play specific gako sound IMMEDIATELY
+                gakoAudio.currentTime = 0;
+                gakoAudio.play().catch(e => console.log('Audio play failed:', e));
+            }
+            
+            // Enable LEVER
+            btnGachaLever.disabled = false;
+            btnGachaLever.style.cursor = 'pointer';
+            btnGachaLever.style.opacity = '1';
+        } else {
+            gachaStatus.innerText = 'Error: ' + data.error;
+            resetGachaUI(); // Restore bet button
+        }
+    } catch (e) {
+        gachaStatus.innerText = 'Network error';
+        resetGachaUI();
+    }
+});
+
+btnGachaLever.addEventListener('click', () => {
+    if (!pendingGachaResult) return;
+    const data = pendingGachaResult;
+    pendingGachaResult = null; // Consume the result
+    
+    btnGachaLever.disabled = true;
+    btnGachaLever.style.transform = 'scale(0.95)';
+    btnGachaLever.style.opacity = '0.5';
+    btnGachaLever.style.cursor = 'not-allowed';
+    
+    gachaStatus.innerText = 'Spinning...';
     
     // Simulate reel spinning sound using AudioContext
     initAudio();
@@ -683,84 +742,69 @@ btnGachaSpin.addEventListener('click', async () => {
     osc.start();
     osc.stop(audioCtx.currentTime + 1.5);
 
-    try {
-        const res = await fetch('/api/gacha', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ token })
-        });
-        const data = await res.json();
+    setTimeout(() => {
+        btnGachaLever.style.transform = 'scale(1)';
+        gachaStatus.innerText = '';
+        gachaResultSkin.style.display = 'block';
         
-        if (res.ok) {
-            ownedSkins = data.ownedSkins;
-            
-            // Wait for dramatic effect
-            setTimeout(() => {
-                gachaStatus.innerText = '';
-                gachaResultSkin.style.display = 'block';
-                
-                let bgColor = '#555';
-                let rarityColor = '#aaa';
-                let isHighRarity = false;
-                
-                if (data.rarity === 'RARE') {
-                    bgColor = '#4da6ff';
-                    rarityColor = '#4da6ff';
-                } else if (data.rarity === 'SSR') {
-                    bgColor = '#ff3399';
-                    rarityColor = '#ff3399';
-                    isHighRarity = true;
-                } else if (data.rarity === 'UR') {
-                    bgColor = '#ffbf00';
-                    rarityColor = '#ffbf00';
-                    isHighRarity = true;
-                } else if (data.rarity === 'SECRET') {
-                    bgColor = 'linear-gradient(45deg, #000, #ff00ff, #fff)';
-                    rarityColor = '#ff00ff';
-                    isHighRarity = true;
-                }
-
-                gachaSkinIcon.style.background = bgColor;
-                gachaSkinName.innerText = data.skinId.replace('_', ' ');
-                gachaSkinRarity.innerText = data.rarity;
-                gachaSkinRarity.style.color = rarityColor;
-                
-                if (isHighRarity) {
-                    // PEKARU! (GOGO Lamp lights up)
-                    gogoLamp.style.opacity = '1';
-                    gogoLamp.style.color = '#ff99ff';
-                    gogoLamp.style.textShadow = '0 0 20px #ff00ff, 0 0 40px #ff00ff, 0 0 60px #ff00ff, 0 0 80px #fff';
-                    // Play specific gako sound
-                    gakoAudio.currentTime = 0;
-                    gakoAudio.play().catch(e => console.log('Audio play failed:', e));
-                } else {
-                    // Normal stop sound
-                    const oscStop = audioCtx.createOscillator();
-                    const gainStop = audioCtx.createGain();
-                    oscStop.type = 'square';
-                    oscStop.frequency.setValueAtTime(400, audioCtx.currentTime);
-                    oscStop.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
-                    gainStop.gain.setValueAtTime(0.2, audioCtx.currentTime);
-                    gainStop.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
-                    oscStop.connect(gainStop);
-                    gainStop.connect(audioCtx.destination);
-                    oscStop.start();
-                    oscStop.stop(audioCtx.currentTime + 0.2);
-                }
-                
-                btnGachaSpin.disabled = false;
-                btnGachaSpin.style.transform = 'scale(1)';
-            }, 1500); // 1.5 seconds wait
-        } else {
-            gachaStatus.innerText = 'Error: ' + data.error;
-            btnGachaSpin.disabled = false;
-            btnGachaSpin.style.transform = 'scale(1)';
+        let bgColor = '#555';
+        let rarityColor = '#aaa';
+        let isHighRarity = false;
+        
+        if (data.rarity === 'RARE') {
+            bgColor = '#4da6ff';
+            rarityColor = '#4da6ff';
+        } else if (data.rarity === 'SSR') {
+            bgColor = '#ff3399';
+            rarityColor = '#ff3399';
+            isHighRarity = true;
+        } else if (data.rarity === 'UR') {
+            bgColor = '#ffbf00';
+            rarityColor = '#ffbf00';
+            isHighRarity = true;
+        } else if (data.rarity === 'SECRET') {
+            bgColor = 'linear-gradient(45deg, #000, #ff00ff, #fff)';
+            rarityColor = '#ff00ff';
+            isHighRarity = true;
         }
-    } catch (e) {
-        gachaStatus.innerText = 'Network error';
-        btnGachaSpin.disabled = false;
-        btnGachaSpin.style.transform = 'scale(1)';
-    }
+
+        gachaSkinIcon.style.background = bgColor;
+        gachaSkinName.innerText = data.skinId.replace('_', ' ');
+        gachaSkinRarity.innerText = data.rarity;
+        gachaSkinRarity.style.color = rarityColor;
+        
+        if (!isHighRarity) {
+            // Normal stop sound for Rare
+            const oscStop = audioCtx.createOscillator();
+            const gainStop = audioCtx.createGain();
+            oscStop.type = 'square';
+            oscStop.frequency.setValueAtTime(400, audioCtx.currentTime);
+            oscStop.frequency.exponentialRampToValueAtTime(100, audioCtx.currentTime + 0.2);
+            gainStop.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainStop.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.2);
+            oscStop.connect(gainStop);
+            gainStop.connect(audioCtx.destination);
+            oscStop.start();
+            oscStop.stop(audioCtx.currentTime + 0.2);
+        } else {
+            // High rarity stop sound (Fanfare)
+            const oscStop = audioCtx.createOscillator();
+            const gainStop = audioCtx.createGain();
+            oscStop.type = 'sine';
+            oscStop.frequency.setValueAtTime(880, audioCtx.currentTime);
+            gainStop.gain.setValueAtTime(0.2, audioCtx.currentTime);
+            gainStop.gain.linearRampToValueAtTime(0, audioCtx.currentTime + 1.0);
+            oscStop.connect(gainStop);
+            gainStop.connect(audioCtx.destination);
+            oscStop.start();
+            oscStop.stop(audioCtx.currentTime + 1.0);
+        }
+        
+        // Re-enable BET for the next round
+        btnGachaBet.disabled = false;
+        btnGachaBet.style.transform = 'scale(1)';
+        btnGachaBet.style.opacity = '1';
+    }, 1500); // 1.5 seconds wait
 });
 
 socket.on('chat_message', (data) => {
