@@ -196,6 +196,12 @@
     transform: none !important;
     cursor: not-allowed;
 }
+@keyframes darkFloat {
+    0% { transform: translateY(0px) rotate(-5deg); }
+    50% { transform: translateY(-15px) rotate(5deg); }
+    100% { transform: translateY(0px) rotate(-5deg); }
+}
+
 .player-list-container, .stage-selection-container, .skin-selection-container {
     margin: 20px 0;
     text-align: left;
@@ -483,7 +489,7 @@
     </script>
     <!-- Mascot Character -->
     <div id="mascot-container" style="position: absolute; bottom: 20px; left: 20px; z-index: 10; animation: darkFloat 4s ease-in-out infinite;">
-        <img src="assets/mascot_dark.jpg" alt="Dark Mascot" style="width: 150px; filter: drop-shadow(0 0 20px #8b0000); mix-blend-mode: screen; border-radius: 20px;">
+        <img src="assets/mascot_dark.png" alt="Dark Mascot" style="width: 150px; filter: drop-shadow(0 0 20px #8b0000); border-radius: 20px;">
     </div>
     <button id="btn-mute">🎵</button>
     <button id="btn-options">⚙️</button>
