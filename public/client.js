@@ -19,8 +19,8 @@ const btnChatSend = document.getElementById('chat-send');
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const BOARD_SIZE = 800;
-const GOAL_SIZE = 240;
+let BOARD_SIZE = 800;
+let GOAL_SIZE = 240;
 const PUCK_RADIUS = 15;
 const PADDLE_RADIUS = 35;
 const ITEM_RADIUS = 20;
@@ -343,6 +343,13 @@ document.querySelectorAll('.stage-option').forEach(el => {
     });
 });
 
+document.querySelectorAll('.size-option').forEach(el => {
+    el.addEventListener('click', () => {
+        const size = parseInt(el.getAttribute('data-size'), 10);
+        socket.emit('change_size', size);
+    });
+});
+
 document.querySelectorAll('.skin-option').forEach(el => {
     el.addEventListener('click', () => {
         const skin = el.getAttribute('data-skin');
@@ -389,6 +396,13 @@ socket.on('system_message', (msg) => {
 socket.on('game_state', (state) => {
     serverState = state;
     
+    if (state.boardSize && state.boardSize !== BOARD_SIZE) {
+        BOARD_SIZE = state.boardSize;
+        GOAL_SIZE = Math.floor(BOARD_SIZE * 0.3);
+        canvas.width = BOARD_SIZE;
+        canvas.height = BOARD_SIZE;
+    }
+    
     if (state.status === 'WAITING') {
         document.getElementById('gameover-overlay').style.display = 'none';
         document.getElementById('game-container').style.display = 'none';
@@ -417,6 +431,16 @@ socket.on('game_state', (state) => {
         if (state.stage) {
             document.querySelectorAll('.stage-option').forEach(el => {
                 if (el.getAttribute('data-stage') === state.stage) {
+                    el.classList.add('selected');
+                } else {
+                    el.classList.remove('selected');
+                }
+            });
+        }
+        
+        if (state.boardSize) {
+            document.querySelectorAll('.size-option').forEach(el => {
+                if (parseInt(el.getAttribute('data-size'), 10) === state.boardSize) {
                     el.classList.add('selected');
                 } else {
                     el.classList.remove('selected');

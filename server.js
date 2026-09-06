@@ -11,8 +11,6 @@ const PORT = process.env.PORT || 3000;
 app.use(express.static(path.join(__dirname, 'public')));
 
 // ゲームの論理サイズと定数
-const BOARD_SIZE = 800;
-const GOAL_SIZE = 240;
 const PUCK_RADIUS = 15;
 const PADDLE_RADIUS = 35;
 const ITEM_RADIUS = 20;
@@ -27,7 +25,9 @@ const EFFECT_DURATION = 10000; // 10秒
 const rooms = {};
 const connectedClients = {}; // socket.id -> { roomId, role, name }
 
-function createInitialGameState() {
+function createInitialGameState(boardSize = 800) {
+    const BOARD_SIZE = boardSize;
+    const GOAL_SIZE = Math.floor(BOARD_SIZE * 0.3);
     return {
         events: [],
         pucks: [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null, isHyper: false }],
@@ -41,11 +41,14 @@ function createInitialGameState() {
         },
         status: 'WAITING',
         stage: 'CYBERPUNK',
+        boardSize: boardSize,
         winner: null
     };
 }
 
 function resetPucks(roomState) {
+    const BOARD_SIZE = roomState.boardSize || 800;
+    const GOAL_SIZE = Math.floor(BOARD_SIZE * 0.3);
     roomState.events = [];
     roomState.pucks = [{ x: BOARD_SIZE / 2, y: BOARD_SIZE / 2, vx: 0, vy: 0, lastHitter: null, isHyper: false }];
     roomState.items = [];
@@ -86,6 +89,7 @@ function startGame(roomId) {
 }
 
 function handleGoal(roomId, role, puckIndex) {
+    const BOARD_SIZE = rooms[roomId]?.boardSize || 800;
     const roomState = rooms[roomId];
     if (!roomState || roomState.status !== 'PLAYING') return;
 
@@ -131,6 +135,7 @@ function handleGoal(roomId, role, puckIndex) {
 }
 
 function applyItemEffect(roomId, type, puck) {
+    const BOARD_SIZE = rooms[roomId]?.boardSize || 800;
     const roomState = rooms[roomId];
     if (!roomState) return;
 
@@ -279,15 +284,29 @@ io.on('connection', (socket) => {
         socket.disconnect(); // Triggers the existing disconnect logic to leave room
     });
 
-    socket.on('change_stage', (stageName) => {
+    
+    socket.on('change_stage', (stage) => {
         const clientInfo = connectedClients[socket.id];
         if (clientInfo && clientInfo.roomId) {
             const roomState = rooms[clientInfo.roomId];
             if (roomState && roomState.status === 'WAITING') {
-                roomState.stage = stageName;
+                roomState.stage = stage;
+                io.to(clientInfo.roomId).emit('game_state', roomState);
             }
         }
     });
+
+    socket.on('change_size', (size) => {
+        const clientInfo = connectedClients[socket.id];
+        if (clientInfo && clientInfo.roomId) {
+            const roomState = rooms[clientInfo.roomId];
+            if (roomState && roomState.status === 'WAITING') {
+                roomState.boardSize = size;
+                io.to(clientInfo.roomId).emit('game_state', roomState);
+            }
+        }
+    });
+
 
     socket.on('change_skin', (skinId) => {
         const clientInfo = connectedClients[socket.id];
@@ -399,6 +418,8 @@ const INTERVAL = 1000 / FPS;
 setInterval(() => {
     for (const roomId in rooms) {
         const roomState = rooms[roomId];
+        const BOARD_SIZE = roomState.boardSize || 800;
+        const GOAL_SIZE = Math.floor(BOARD_SIZE * 0.3);
         
         if (roomState.status !== 'PLAYING') {
             io.to(roomId).emit('game_state', roomState);

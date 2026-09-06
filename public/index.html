@@ -202,12 +202,12 @@
     color: #333;
     border: 1px solid #ddd;
 }
-.stage-options, .skin-options {
+.stage-options, .skin-options, .size-options {
     display: flex;
     justify-content: space-between;
     gap: 10px;
 }
-.stage-option, .skin-option {
+.stage-option, .skin-option, .size-option {
     flex: 1;
     cursor: pointer;
     text-align: center;
@@ -217,11 +217,11 @@
     transition: 0.2s;
     background: rgba(255,255,255,0.6);
 }
-.stage-option:hover, .skin-option:hover {
+.stage-option:hover, .skin-option:hover, .size-option:hover {
     background: rgba(255,255,255,1);
     transform: translateY(-2px);
 }
-.stage-option.selected, .skin-option.selected {
+.stage-option.selected, .skin-option.selected, .size-option.selected {
     border-color: #32CD32;
     background: rgba(50, 205, 50, 0.2);
 }
@@ -237,11 +237,17 @@
     border-radius: 50%;
     background: #ddd;
 }
-.stage-option span, .skin-option span {
+.stage-option span, .skin-option span, .size-option span {
     font-size: 0.9em;
     display: block;
     font-weight: bold;
     color: #444;
+}
+.size-option-title {
+    font-size: 24px;
+    font-weight: bold;
+    padding: 15px 0 5px 0;
+    color: #FF69B4;
 }
 
         #btn-mute {
@@ -474,7 +480,25 @@
         </div>
         
         <div class="stage-selection-container">
-            <h3 style="margin-bottom: 10px;">Select Stage</h3>
+            <h3 style="margin-bottom: 10px;">Select Stage Size</h3>
+            <div class="size-options" id="size-options">
+                <div class="size-option" data-size="600">
+                    <div class="size-option-title">Small</div>
+                    <span>600 x 600</span>
+                </div>
+                <div class="size-option selected" data-size="800">
+                    <div class="size-option-title">Medium</div>
+                    <span>800 x 800</span>
+                </div>
+                <div class="size-option" data-size="1000">
+                    <div class="size-option-title">Large</div>
+                    <span>1000 x 1000</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="stage-selection-container">
+            <h3 style="margin-bottom: 10px;">Select Stage Theme</h3>
             <div class="stage-options" id="stage-options">
                 <div class="stage-option selected" data-stage="CYBERPUNK">
                     <img src="assets/bg_cyberpunk.jpg" alt="Cyberpunk">
