@@ -32,13 +32,13 @@ let puckTrails = [];
 let isGameLoopRunning = false;
 
 const bgImages = {
-    CYBERPUNK: new Image(),
-    RETRO: new Image(),
-    ICE: new Image()
+    CHAOS_VOID: new Image(),
+    BLOOD_MOON: new Image(),
+    ABYSSAL_ICE: new Image()
 };
-bgImages.CYBERPUNK.src = 'assets/bg_cyberpunk.jpg';
-bgImages.RETRO.src = 'assets/bg_retro.jpg';
-bgImages.ICE.src = 'assets/bg_ice.jpg';
+bgImages.CHAOS_VOID.src = 'assets/bg_chaos_void.jpg';
+bgImages.BLOOD_MOON.src = 'assets/bg_blood_moon.jpg';
+bgImages.ABYSSAL_ICE.src = 'assets/bg_abyssal_ice.jpg';
 
 const skinImages = {
     DOGE: new Image(),
@@ -670,29 +670,40 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: false });
 
 function drawBoard() {
-    const stage = (serverState && serverState.stage) ? serverState.stage : 'CYBERPUNK';
+    const stage = (serverState && serverState.stage) ? serverState.stage : 'CHAOS_VOID';
     
     // 背景画像の描画
     if (bgImages[stage] && bgImages[stage].complete) {
         ctx.drawImage(bgImages[stage], 0, 0, BOARD_SIZE, BOARD_SIZE);
-        ctx.fillStyle = 'rgba(0,0,0,0.8)';
+        ctx.fillStyle = 'rgba(0,0,0,0.6)';
         ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     } else {
         ctx.fillStyle = '#111';
         ctx.fillRect(-50, -50, canvas.width + 100, canvas.height + 100);
     }
 
+    const pulse = (Math.sin(Date.now() / 400) + 1) / 2; // 0.0 to 1.0
+
     let centerLineColor = 'rgba(255, 255, 255, 0.2)';
     let defaultWallColor = '#fff';
+    let shadowColor = '#ffffff';
+    let baseShadowBlur = 5;
     
-    if (stage === 'CYBERPUNK') {
-        centerLineColor = 'rgba(0, 255, 255, 0.3)';
-    } else if (stage === 'RETRO') {
-        centerLineColor = 'rgba(255, 100, 0, 0.4)';
-        defaultWallColor = '#ff6600';
-    } else if (stage === 'ICE') {
-        centerLineColor = 'rgba(200, 255, 255, 0.5)';
-        defaultWallColor = '#aaffff';
+    if (stage === 'CHAOS_VOID') {
+        centerLineColor = `rgba(255, 0, 60, ${0.3 + pulse * 0.4})`;
+        defaultWallColor = '#ff003c';
+        shadowColor = '#8b0000';
+        baseShadowBlur = 10 + pulse * 10;
+    } else if (stage === 'BLOOD_MOON') {
+        centerLineColor = `rgba(150, 0, 255, ${0.3 + pulse * 0.4})`;
+        defaultWallColor = '#aa00ff';
+        shadowColor = '#5500aa';
+        baseShadowBlur = 8 + pulse * 8;
+    } else if (stage === 'ABYSSAL_ICE') {
+        centerLineColor = `rgba(0, 255, 255, ${0.3 + pulse * 0.4})`;
+        defaultWallColor = '#00ffff';
+        shadowColor = '#0088ff';
+        baseShadowBlur = 12 + pulse * 5;
     }
 
     const goalStart = (BOARD_SIZE - GOAL_SIZE) / 2;
@@ -707,17 +718,11 @@ function drawBoard() {
 
     const drawWall = (x1, y1, x2, y2, color, isGoal = false) => {
         ctx.strokeStyle = color;
-        ctx.lineWidth = isGoal ? 10 : 6;
-        if (stage === 'RETRO' && !isGoal) {
-            ctx.shadowBlur = 4;
-            ctx.shadowColor = color;
-        } else if (stage === 'CYBERPUNK' && !isGoal) {
-            ctx.shadowBlur = 2;
-            ctx.shadowColor = '#00ffff';
-        } else if (stage === 'ICE' && !isGoal) {
-            ctx.shadowBlur = 6;
-            ctx.shadowColor = '#ffffff';
-        }
+        ctx.lineWidth = isGoal ? 10 : 4;
+        
+        ctx.shadowBlur = isGoal ? baseShadowBlur * 1.5 : baseShadowBlur;
+        ctx.shadowColor = isGoal ? color : shadowColor;
+        
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
@@ -726,7 +731,7 @@ function drawBoard() {
     };
 
     drawWall(0, 0, goalStart, 0, defaultWallColor);
-    drawWall(goalStart, 0, goalEnd, 0, getGoalColor('top', '#4444ff'), true);
+    drawWall(goalStart, 0, goalEnd, 0, getGoalColor('top', '#ff4444'), true);
     drawWall(goalEnd, 0, BOARD_SIZE, 0, defaultWallColor);
 
     drawWall(0, BOARD_SIZE, goalStart, BOARD_SIZE, defaultWallColor);
@@ -734,15 +739,17 @@ function drawBoard() {
     drawWall(goalEnd, BOARD_SIZE, BOARD_SIZE, BOARD_SIZE, defaultWallColor);
 
     drawWall(0, 0, 0, goalStart, defaultWallColor);
-    drawWall(0, goalStart, 0, goalEnd, getGoalColor('left', '#44ff44'), true);
+    drawWall(0, goalStart, 0, goalEnd, getGoalColor('left', '#ff4444'), true);
     drawWall(0, goalEnd, 0, BOARD_SIZE, defaultWallColor);
 
     drawWall(BOARD_SIZE, 0, BOARD_SIZE, goalStart, defaultWallColor);
-    drawWall(BOARD_SIZE, goalStart, BOARD_SIZE, goalEnd, getGoalColor('right', '#ffff44'), true);
+    drawWall(BOARD_SIZE, goalStart, BOARD_SIZE, goalEnd, getGoalColor('right', '#ff4444'), true);
     drawWall(BOARD_SIZE, goalEnd, BOARD_SIZE, BOARD_SIZE, defaultWallColor);
 
     ctx.strokeStyle = centerLineColor;
     ctx.lineWidth = 3;
+    ctx.shadowBlur = baseShadowBlur;
+    ctx.shadowColor = shadowColor;
     ctx.beginPath();
     ctx.moveTo(0, BOARD_SIZE / 2);
     ctx.lineTo(BOARD_SIZE, BOARD_SIZE / 2);
@@ -753,6 +760,8 @@ function drawBoard() {
     ctx.beginPath();
     ctx.arc(BOARD_SIZE / 2, BOARD_SIZE / 2, 100, 0, Math.PI * 2);
     ctx.stroke();
+    
+    ctx.shadowBlur = 0;
 }
 
 function drawCircle(x, y, radius, color, isMe = false) {
@@ -793,6 +802,15 @@ function drawPuck(puck, i) {
 }
 
 function drawPaddle(x, y, color, isMe, radius, sp = 0, skin = 'DEFAULT') {
+    // 暗黒オーラ
+    ctx.beginPath();
+    ctx.arc(x, y, radius + 5, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.shadowBlur = 20;
+    ctx.shadowColor = '#000000';
+    ctx.fill();
+    ctx.shadowBlur = 0;
+
     if (sp >= 100) {
         ctx.save();
         ctx.translate(x, y);

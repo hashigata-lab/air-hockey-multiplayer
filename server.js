@@ -139,7 +139,7 @@ function createInitialGameState(boardSize = 800) {
             right:  { x: BOARD_SIZE - PADDLE_RADIUS - 20, y: BOARD_SIZE / 2, active: false, id: null, name: '', color: '#ffff44', lives: INITIAL_LIVES, eliminated: false, paddleRadius: PADDLE_RADIUS, barrierActive: false, activeEffect: null, sp: 0, lastX: 0, lastY: 0, lastSpeed: 0, skin: 'DEFAULT' }
         },
         status: 'WAITING',
-        stage: 'CYBERPUNK',
+        stage: 'CHAOS_VOID',
         boardSize: boardSize,
         winner: null
     };
